@@ -109,6 +109,7 @@ export async function getActiveSurvey(slug: string): Promise<ActiveSurvey> {
       help_text,
       position,
       is_required,
+      audience,
       min_value,
       max_value,
       question_options (
@@ -175,6 +176,7 @@ export async function getActiveSurvey(slug: string): Promise<ActiveSurvey> {
       helpText: q.help_text,
       position: q.position,
       required: q.is_required,
+      audience: q.audience ?? "all",
       minValue: q.min_value,
       maxValue: q.max_value,
       options,
@@ -264,6 +266,7 @@ async function getActiveSurveyLegacy(
       helpText: q.help_text,
       position: q.position,
       required: q.is_required,
+      audience: "all",
       minValue: q.min_value,
       maxValue: q.max_value,
       options,

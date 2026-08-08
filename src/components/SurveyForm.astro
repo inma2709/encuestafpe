@@ -14,6 +14,7 @@ const familiesQuestion = questions.find((q) => q.code === "demo_families");
 const familyQuestion = questions.find((q) => q.code === "demo_family");
 const missingProblemQuestion = questions.find((q) => q.code === "sector_missing_problem");
 const openCommentQuestion = questions.find((q) => q.code === "open_comment");
+const respondentTypeQuestion = questions.find((q) => q.code === "respondent_type");
 
 const requiredCount = questions.filter((q) => q.required).length;
 const estMinutes = Math.max(8, Math.round(requiredCount * 0.35));
@@ -68,12 +69,13 @@ const estMinutes = Math.max(8, Math.round(requiredCount * 0.35));
       <fieldset
         class:list={[
           "chapter",
-          q.code === "open_comment" && "hidden",
+          q.code !== "respondent_type" && "hidden",
         ]}
         style={`animation-delay: ${Math.min(index * 18, 180)}ms`}
         data-question-code={q.code}
         data-question-id={q.id}
         data-required={q.required ? "1" : "0"}
+        data-audience={q.audience === "all" ? "all" : q.audience.join(",")}
         data-max-selections={q.maxValue ?? undefined}
         data-conditional={q.code === "open_comment" ? "open_comment" : undefined}
       >
@@ -235,6 +237,7 @@ const estMinutes = Math.max(8, Math.round(requiredCount * 0.35));
     familyId: familyQuestion?.id ?? null,
     missingId: missingProblemQuestion?.id ?? null,
     openId: openCommentQuestion?.id ?? null,
+    respondentTypeId: respondentTypeQuestion?.id ?? null,
     missingYesCode: "missing_yes",
   }}
 >
@@ -243,6 +246,35 @@ const estMinutes = Math.max(8, Math.round(requiredCount * 0.35));
   const estMinutes = Number(form?.getAttribute("data-est-minutes") || "10");
   let isSubmitting = false;
   let lastBlockedQuestion = null;
+
+  function getRespondentType() {
+    if (!respondentTypeId) return null;
+    const selected = form?.querySelector(`input[name="q_${respondentTypeId}"]:checked`);
+    return selected instanceof HTMLInputElement ? selected.getAttribute("data-option-code") : null;
+  }
+
+  function isApplicable(fieldset, respondentType) {
+    const audience = fieldset.getAttribute("data-audience") || "all";
+    return audience === "all" || !!respondentType && audience.split(",").includes(respondentType);
+  }
+
+  function resetQuestion(fieldset) {
+    getQuestionControls(fieldset).forEach((control) => {
+      if (control instanceof HTMLInputElement && (control.type === "radio" || control.type === "checkbox")) control.checked = false;
+      else if (control instanceof HTMLSelectElement || control instanceof HTMLTextAreaElement || control instanceof HTMLInputElement) control.value = "";
+    });
+    clearQuestionError(fieldset);
+  }
+
+  function updateAudience() {
+    const respondentType = getRespondentType();
+    form?.querySelectorAll("fieldset[data-question-id]").forEach((fieldset) => {
+      if (!(fieldset instanceof HTMLElement) || fieldset.getAttribute("data-question-id") === respondentTypeId) return;
+      const show = isApplicable(fieldset, respondentType);
+      if (!show && !fieldset.classList.contains("hidden")) resetQuestion(fieldset);
+      fieldset.classList.toggle("hidden", !show);
+    });
+  }
 
   function isQuestionAnswered(fieldset) {
     if (!(fieldset instanceof HTMLElement)) return false;
@@ -340,6 +372,8 @@ const estMinutes = Math.max(8, Math.round(requiredCount * 0.35));
   }
 
   form?.addEventListener("change", (event) => {
+    if (event.target instanceof HTMLInputElement && event.target.name === `q_${respondentTypeId}`) updateAudience();
+    toggleOpenComment();
     updateProgress();
     updateLockState();
     const fieldset = event.target instanceof Element
@@ -375,6 +409,7 @@ const estMinutes = Math.max(8, Math.round(requiredCount * 0.35));
     if (fieldset instanceof HTMLElement) explainBlockedQuestion();
   });
   updateProgress();
+  updateAudience();
   updateLockState();
 
   function setSubmissionStatus(message, state) {

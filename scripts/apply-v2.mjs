@@ -172,6 +172,19 @@ function likertOptions() {
 
 const questionsDef = [
   {
+    n: 0,
+    code: "respondent_type",
+    type: "single",
+    label: "¿Cuál es actualmente tu relación con la Formación Profesional para el Empleo (FPE)?",
+    required: true,
+    audience: ["all"],
+    options: [
+      ["teacher", "Soy docente de FPE actualmente."],
+      ["former_teacher", "He trabajado como docente de FPE, aunque actualmente no estoy impartiendo."],
+      ["aspiring_teacher", "Estoy preparándome o intentando acceder a la docencia FPE."],
+    ],
+  },
+  {
     n: 1,
     code: "demo_gender",
     type: "single",
@@ -598,6 +611,55 @@ const questionsDef = [
       ["fut_unknown", "No lo sé"],
     ],
   },
+  {
+    n: 31,
+    code: "aspiring_family",
+    type: "select",
+    label: "¿En qué familia profesional te gustaría impartir?",
+    help: "Selecciona la familia principal que te interesa.",
+    required: true,
+    audience: ["aspiring_teacher"],
+    familyOpts: true,
+  },
+  {
+    n: 32, code: "aspiring_requirements_knowledge", type: "single", required: true, audience: ["aspiring_teacher"],
+    label: "¿Conoces los requisitos para ejercer como docente de FPE?",
+    options: [["req_yes", "Sí, los conozco bien"], ["req_somewhat", "Los conozco parcialmente"], ["req_no", "No, necesito informarme"]],
+  },
+  {
+    n: 33, code: "aspiring_teaching_qualification", type: "single", required: true, audience: ["aspiring_teacher"],
+    label: "¿Dispones de formación o habilitación docente?",
+    options: [["qualification_yes", "Sí"], ["qualification_in_progress", "La estoy cursando o preparando"], ["qualification_no", "No"]],
+  },
+  {
+    n: 34, code: "aspiring_sector_experience", type: "single", required: true, audience: ["aspiring_teacher"],
+    label: "¿Tienes experiencia profesional relacionada con la materia que quieres impartir?",
+    options: [["sector_exp_yes", "Sí"], ["sector_exp_no", "No"]],
+  },
+  {
+    n: 35, code: "aspiring_job_search", type: "single", required: true, audience: ["aspiring_teacher"],
+    label: "¿Has buscado ya ofertas como docente de FPE?",
+    options: [["search_yes", "Sí, activamente"], ["search_somewhat", "He mirado algunas ofertas"], ["search_no", "Todavía no"]],
+  },
+  {
+    n: 36, code: "aspiring_main_difficulty", type: "single", required: true, audience: ["aspiring_teacher"],
+    label: "¿Cuál es la principal dificultad que encuentras para acceder?",
+    options: [["difficulty_requirements", "Entender los requisitos"], ["difficulty_qualification", "Obtener la habilitación docente"], ["difficulty_experience", "Acreditar experiencia profesional"], ["difficulty_offers", "Encontrar ofertas u oportunidades"], ["difficulty_other", "Otra dificultad"]],
+  },
+  {
+    n: 37, code: "aspiring_work_mode", type: "single", required: true, audience: ["aspiring_teacher"],
+    label: "¿Qué modalidad de trabajo te interesaría más?",
+    options: [["mode_presencial", "Presencial"], ["mode_teleformacion", "Teleformación"], ["mode_mixed", "Mixta"]],
+  },
+  {
+    n: 38, code: "aspiring_economic_conditions", type: "likert", required: true, audience: ["aspiring_teacher"], likert: true,
+    label: "Considero que las condiciones económicas de la docencia FPE son atractivas",
+  },
+  {
+    n: 39, code: "aspiring_hourly_rate", type: "number", required: true, audience: ["aspiring_teacher"], minValue: 1, maxValue: 200,
+    label: "¿Qué remuneración bruta por hora considerarías adecuada?",
+    help: "Indica una cifra aproximada en euros.",
+  },
 ];
 
 console.log("Checking catalog tables…");
@@ -681,6 +743,7 @@ for (const def of questionsDef) {
     is_required: def.required,
     is_active: true,
     max_value: def.maxValue ?? null,
+    audience: def.audience ?? ["teacher", "former_teacher"],
   };
 
   let ins = await sb.from("questions").insert(questionRow);

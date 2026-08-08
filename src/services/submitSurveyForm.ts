@@ -1,6 +1,8 @@
 import type { AnswerInput, SubmitSurveyResult } from "@/types";
 import { getActiveSurvey } from "./getActiveSurvey";
 import { submitSurvey } from "./submitSurvey";
+import { isQuestionApplicable, isRespondentType } from "@/lib/respondent";
+import { DomainError } from "@/types";
 
 /** Converts the browser form payload into validated survey answers before saving it. */
 export async function submitSurveyForm(
@@ -13,8 +15,16 @@ export async function submitSurveyForm(
   const durationMs = Number.parseInt(durationRaw, 10);
   const active = await getActiveSurvey(studySlug);
   const answers: AnswerInput[] = [];
+  const profileQuestion = active.questions.find((question) => question.code === "respondent_type");
+  const profileValue = profileQuestion ? String(form.get(`q_${profileQuestion.id}`) ?? "") : "";
+  const respondentType = profileQuestion?.options.find((option) => option.id === profileValue)?.code ?? "";
+
+  if (!profileQuestion || !isRespondentType(respondentType)) {
+    throw new DomainError("Selecciona tu relación con la FPE", "VALIDATION");
+  }
 
   for (const question of active.questions) {
+    if (!isQuestionApplicable(question, respondentType)) continue;
     const key = `q_${question.id}`;
 
     if (question.type === "multi") {

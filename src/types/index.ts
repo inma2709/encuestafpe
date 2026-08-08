@@ -7,6 +7,7 @@ export type QuestionType =
   | "select";
 
 export type StudyStatus = "draft" | "open" | "closed" | "archived";
+export type QuestionAudience = "all" | Array<"teacher" | "former_teacher" | "aspiring_teacher">;
 
 export interface Region {
   id: string;
@@ -35,6 +36,7 @@ export interface SurveyQuestion {
   helpText: string | null;
   position: number;
   required: boolean;
+  audience: QuestionAudience;
   minValue: number | null;
   maxValue: number | null;
   options: SurveyOption[];

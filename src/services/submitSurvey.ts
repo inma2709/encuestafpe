@@ -7,6 +7,7 @@ import {
   type SubmitSurveyResult,
 } from "@/types";
 import { getActiveSurvey } from "./getActiveSurvey";
+import { isQuestionApplicable, isRespondentType, type RespondentType } from "@/lib/respondent";
 
 export async function submitSurvey(
   input: SubmitSurveyInput,
@@ -21,7 +22,7 @@ export async function submitSurvey(
     throw new DomainError("Este estudio no acepta nuevas respuestas", "CLOSED");
   }
 
-  validateAnswers(active.questions, input.answers);
+  const respondentType = validateAnswers(active.questions, input.answers);
 
   const unlockToken = createUnlockToken();
   const unlockTokenHash = hashUnlockToken(unlockToken);
@@ -35,6 +36,7 @@ export async function submitSurvey(
       survey_version_id: active.version.id,
       unlock_token_hash: unlockTokenHash,
       duration_ms: input.durationMs ?? null,
+      respondent_type: respondentType,
     })
     .select("id")
     .single();
@@ -64,9 +66,20 @@ export async function submitSurvey(
 function validateAnswers(
   questions: Awaited<ReturnType<typeof getActiveSurvey>>["questions"],
   answers: AnswerInput[],
-): void {
+): RespondentType {
   const byId = new Map(questions.map((q) => [q.id, q]));
   const answered = new Set<string>();
+  const profileQuestion = questions.find((question) => question.code === "respondent_type");
+  const profileAnswer = profileQuestion
+    ? answers.find((answer) => answer.questionId === profileQuestion.id && "optionId" in answer)
+    : undefined;
+  const profileOption = profileQuestion && profileAnswer && "optionId" in profileAnswer
+    ? profileQuestion.options.find((option) => option.id === profileAnswer.optionId)
+    : undefined;
+  if (!profileOption || !isRespondentType(profileOption.code)) {
+    throw new DomainError("Selecciona tu relación con la FPE", "VALIDATION");
+  }
+  const respondentType = profileOption.code;
 
   for (const answer of answers) {
     const question = byId.get(answer.questionId);
@@ -75,6 +88,9 @@ function validateAnswers(
     }
     if (answered.has(answer.questionId)) {
       throw new DomainError("Respuesta duplicada", "VALIDATION");
+    }
+    if (!isQuestionApplicable(question, respondentType)) {
+      throw new DomainError("La pregunta no corresponde al perfil seleccionado", "VALIDATION");
     }
     answered.add(answer.questionId);
 
@@ -240,10 +256,11 @@ function validateAnswers(
   }
 
   for (const question of questions) {
-    if (question.required && !answered.has(question.id)) {
+    if (question.required && isQuestionApplicable(question, respondentType) && !answered.has(question.id)) {
       throw new DomainError(`Falta responder: ${question.label}`, "VALIDATION");
     }
   }
+  return respondentType;
 }
 
 function flattenAnswers(

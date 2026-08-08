@@ -12,6 +12,7 @@ import {
   type TemporalPoint,
 } from "@/types";
 import { getActiveSurvey } from "./getActiveSurvey";
+import { isQuestionApplicable, type RespondentType } from "@/lib/respondent";
 
 export type AnswerRow = {
   question_id: string;
@@ -23,6 +24,7 @@ export type AnswerRow = {
 export type SessionRow = {
   id: string;
   completed_at: string;
+  respondent_type: RespondentType | null;
 };
 
 export interface SurveyDataset {
@@ -75,7 +77,7 @@ export async function loadSurveySessions(studySlug: string) {
 
   const { data: sessions, error: sessionsError } = await admin
     .from("response_sessions")
-    .select("id, completed_at")
+    .select("id, completed_at, respondent_type")
     .eq("wave_id", active.wave.id)
     .eq("survey_version_id", active.version.id);
 
@@ -169,10 +171,15 @@ export function buildQuestionResults(
   minN: number,
 ): QuestionResult[] {
   const sessionSet = new Set(sessionIds);
-  const validSessions = sessionIds.length;
   const rows = dataset.answers.filter((a) => sessionSet.has(a.session_id));
 
   return dataset.active.questions.map((question) => {
+    const validSessions = dataset.sessions.filter((session) =>
+      sessionSet.has(session.id) && (
+        // Historical sessions predate profile classification and contain the legacy teacher questionnaire.
+        session.respondent_type == null || isQuestionApplicable(question, session.respondent_type)
+      ),
+    ).length;
     const qRows = rows.filter((r) => r.question_id === question.id);
 
     if (question.type === "text") {
