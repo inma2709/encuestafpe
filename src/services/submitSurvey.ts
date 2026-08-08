@@ -17,6 +17,19 @@ export async function submitSurvey(
   }
 
   const active = await getActiveSurvey(input.studySlug);
+  const debugProfileQuestion = active.questions.find(
+    (question) => question.code === "respondent_type",
+  );
+  const answersProfile = debugProfileQuestion
+    ? input.answers.find((answer) => answer.questionId === debugProfileQuestion.id)
+    : null;
+  console.log("[submitSurvey active debug]", {
+    studyId: active.study.id,
+    waveId: active.wave.id,
+    surveyVersionId: active.version.id,
+    profileQuestionId: debugProfileQuestion?.id ?? null,
+    answersProfile: answersProfile ?? null,
+  });
 
   if (active.study.status !== "open") {
     throw new DomainError("Este estudio no acepta nuevas respuestas", "CLOSED");

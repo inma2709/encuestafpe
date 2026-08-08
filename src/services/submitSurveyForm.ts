@@ -28,11 +28,23 @@ export async function submitSurveyForm(
     profileQuestionFound: Boolean(profileQuestion),
     profileQuestionCode: profileQuestion?.code ?? null,
     profileQuestionId: profileQuestion?.id ?? null,
+    profileValue,
+    profileCode,
+    payloadProfileValue: form.get("q_b7f9e2f4-65a0-4a0c-9493-d798451be57f"),
+    payloadRespondentType: form.get("respondent_type"),
+    profileQuestionMatchesPayload:
+      profileQuestion?.id === "b7f9e2f4-65a0-4a0c-9493-d798451be57f",
     profileOptions: profileQuestion?.options.map((option) => ({
       id: option.id,
       code: option.code,
       active: true,
     })) ?? [],
+    payloadOptionExists: profileQuestion?.options.some(
+      (option) => option.id === "f88ed08c-b524-4fdd-b921-58cde4e5b8e3",
+    ) ?? false,
+    teacherOptionExists: profileQuestion?.options.some(
+      (option) => option.code === "teacher",
+    ) ?? false,
     profileOptionFound: Boolean(profileOption),
     profileOptionCode: profileOption?.code ?? null,
     respondentTypeValid: isRespondentType(respondentType),
