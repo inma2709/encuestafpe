@@ -29,102 +29,78 @@ if (Astro.response.headers) {
 ---
 
 <BaseLayout width="wide">
-  <section class="relative isolate min-h-[min(92vh,52rem)] overflow-hidden">
-    <div
-      class="pointer-events-none absolute inset-0 -z-10"
-      aria-hidden="true"
-      style="
-        background:
-          radial-gradient(ellipse 80% 60% at 70% 20%, rgb(111 130 96 / 0.15), transparent 55%),
-          radial-gradient(ellipse 55% 45% at 15% 80%, rgb(74 92 60 / 0.22), transparent 50%),
-          linear-gradient(165deg, #f8f5ee 0%, #efe8db 48%, #e4ddd0 100%);
-      "
-    >
-    </div>
-    <div
-      class="pointer-events-none absolute inset-0 -z-10 opacity-[0.35]"
-      aria-hidden="true"
-      style="
-        background-image: url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%234a5c3c' fill-opacity='0.06'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\");
-      "
-    >
-    </div>
-
-    <div class="shell-wide flex min-h-[min(92vh,52rem)] flex-col justify-end pb-16 pt-20 sm:justify-center sm:pb-24 sm:pt-28">
-      <div class="fade-up max-w-3xl space-y-8">
-        <div class="flex items-center gap-3">
-          <span class="badge badge-accent">Encuesta FPE Agosto 2026</span>
-          <span class="flex items-center gap-1.5 text-xs text-[var(--color-ink-muted)]">
-            <span class="h-1.5 w-1.5 rounded-full bg-[var(--color-brand-soft)] animate-pulse"></span>
-            En curso
-          </span>
-        </div>
-        <p class="font-display text-3xl leading-[1.05] tracking-tight text-[var(--color-brand-dark)] sm:text-5xl md:text-6xl lg:text-7xl text-balance">
-          Observatorio FPE
+  <section class="home-hero">
+    <div class="shell-wide home-hero__grid">
+      <div class="home-hero__content fade-up">
+        <p class="eyebrow">Estudio independiente · España · Agosto 2026</p>
+        <h1 class="home-hero__title text-balance">
+          ¿Cómo es realmente trabajar como docente de FPE?
+        </h1>
+        <p class="home-hero__intro">
+          Este estudio recoge la experiencia de docentes de Formación Profesional para el Empleo para conocer su realidad profesional, detectar tendencias y hacerlas visibles.
         </p>
-        <h1 class="max-w-2xl text-lg font-medium leading-snug text-[var(--color-ink)] sm:text-xl md:text-2xl lg:text-[1.65rem] text-balance" style="font-family: var(--font-sans)">
-        ¿Cómo es realmente trabajar como docente de FPE?
-                 </h1>
-            <p class="text-lg sm:text-xl text-[var(--color-ink)] font-medium">
-              Este estudio recopila datos anónimos de docentes de Formación Profesional para el Empleo para conocer su realidad profesional, detectar tendencias y hacerlas visibles.
-            </p>
-        <p class="lede text-sm sm:text-base lg:text-lg">
-       
-
-Participa en una encuesta anónima de pocos minutos y contribuye a construir, con datos del propio colectivo, una visión más clara de las condiciones profesionales de quienes impartimos Formación Profesional para el Empleo.
-
-Tu respuesta suma. 
-
+        <p class="lede home-hero__lede">
+          Participa en una encuesta anónima de pocos minutos y ayuda a construir, con datos del propio colectivo, una visión más clara de las condiciones de quienes impartimos FPE.
         </p>
-        <div class="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center">
+
+        <div class="home-hero__actions">
           <a href="/estudios/docentes-fpe-2026/participar" class="btn btn-primary btn-full sm:w-auto">
             Participar en la encuesta
             <Icon name="arrow-right" size={18} />
           </a>
-          <a href="/informes" class="btn btn-ghost btn-full sm:w-auto">
-            <Icon name="chart-bar" size={18} />
-            Ver informes
+          <a href="/informes" class="editorial-link">
+            Consultar informes
+            <Icon name="arrow-right" size={16} />
           </a>
         </div>
-        <div class="flex flex-wrap items-center gap-x-6 gap-y-3 pt-4 text-sm text-[var(--color-ink-muted)]">
-          <div class="flex items-center gap-2">
-            <Icon name="shield-check" size={16} />
-            <span>100% anónimo</span>
+
+        <dl class="home-hero__details" aria-label="Características de la encuesta">
+          <div>
+            <dt><Icon name="shield-check" size={17} /> Anonimato</dt>
+            <dd>No pedimos datos identificativos.</dd>
           </div>
-          <div class="flex items-center gap-2">
-            <Icon name="users" size={16} />
-            <span>Sin registro</span>
+          <div>
+            <dt><Icon name="users" size={17} /> Participación</dt>
+            <dd>Sin registro y en pocos minutos.</dd>
           </div>
-          <div class="flex items-center gap-2">
-            <Icon name="file-text" size={16} />
-            <span>Metodología abierta</span>
-          </div>
+        </dl>
+      </div>
+
+      <figure class="home-hero__figure fade-up" style="animation-delay: 100ms;">
+        <img
+          src="/encuestas.png"
+          width="1254"
+          height="1254"
+          alt="Ilustración de docentes participando en una encuesta"
+          class="home-hero__image"
+        />
+        <figcaption>Una mirada colectiva sobre la docencia en FPE.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="home-evidence" aria-labelledby="datos-title">
+    <div class="shell-wide">
+      <div class="home-evidence__heading">
+        <p class="eyebrow">El estudio en cifras</p>
+        <h2 id="datos-title">Datos para comprender una profesión diversa</h2>
+        <p>Las respuestas anónimas se convierten en una fotografía compartida de la docencia en Formación Profesional para el Empleo.</p>
+      </div>
+
+      <dl class="home-stats">
+        <div class="fade-up" style="animation-delay: 100ms;">
+          <dt>{participantCount}</dt>
+          <dd>Docentes participantes</dd>
         </div>
-      </div>
+        <div class="fade-up" style="animation-delay: 160ms;">
+          <dt>17</dt>
+          <dd>Comunidades autónomas</dd>
+        </div>
+        <div class="fade-up" style="animation-delay: 220ms;">
+          <dt>26</dt>
+          <dd>Familias profesionales</dd>
+        </div>
+      </dl>
     </div>
   </section>
-
-  <section class="shell-wide py-12 sm:py-16">
-    <div class="grid gap-6 sm:grid-cols-3">
-      <div class="rounded-[var(--radius-lg)] border border-[var(--color-line)] bg-[var(--color-surface)] px-6 py-6 text-center shadow-[var(--shadow-soft)] fade-up" style="animation-delay: 100ms;">
-        <p class="font-display text-4xl tabular-nums tracking-tight text-[var(--color-brand-dark)]">{participantCount}</p>
-        <p class="mt-2 text-sm text-[var(--color-ink-muted)]">Docentes participantes</p>
-      </div>
-      <div class="rounded-[var(--radius-lg)] border border-[var(--color-line)] bg-[var(--color-surface)] px-6 py-6 text-center shadow-[var(--shadow-soft)] fade-up" style="animation-delay: 150ms;">
-        <p class="font-display text-4xl tabular-nums tracking-tight text-[var(--color-brand-dark)]">17</p>
-        <p class="mt-2 text-sm text-[var(--color-ink-muted)]">Comunidades autónomas</p>
-      </div>
-      <div class="rounded-[var(--radius-lg)] border border-[var(--color-line)] bg-[var(--color-surface)] px-6 py-6 text-center shadow-[var(--shadow-soft)] fade-up" style="animation-delay: 200ms;">
-        <p class="font-display text-4xl tabular-nums tracking-tight text-[var(--color-brand-dark)]">26</p>
-        <p class="mt-2 text-sm text-[var(--color-ink-muted)]">Familias profesionales</p>
-      </div>
-    </div>
-  </section>
-
-  <div class="flex justify-center pt-2">
-    <a href="/estudios/docentes-fpe-2026/participar" class="btn btn-primary">
-      Participar en la encuesta
-      <Icon name="arrow-right" size={18} />
-    </a>
-  </div>
 </BaseLayout>

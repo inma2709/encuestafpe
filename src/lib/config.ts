@@ -1,5 +1,12 @@
-export function requireEnv(name: keyof ImportMetaEnv): string {
-  const value = import.meta.env[name];
+const ENV = {
+  PUBLIC_SUPABASE_URL: import.meta.env.PUBLIC_SUPABASE_URL,
+  PUBLIC_SUPABASE_ANON_KEY: import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+  SUPABASE_SERVICE_ROLE_KEY: import.meta.env.SUPABASE_SERVICE_ROLE_KEY,
+  SURVEY_UNLOCK_SECRET: import.meta.env.SURVEY_UNLOCK_SECRET,
+} as const;
+
+export function requireEnv(name: keyof typeof ENV): string {
+  const value = ENV[name];
   if (!value) {
     throw new Error(`Missing environment variable: ${name}`);
   }
