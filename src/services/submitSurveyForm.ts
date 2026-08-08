@@ -17,7 +17,7 @@ export async function submitSurveyForm(
   const answers: AnswerInput[] = [];
   const profileQuestion = active.questions.find((question) => question.code === "respondent_type");
   const profileValue = profileQuestion ? String(form.get(`q_${profileQuestion.id}`) ?? "") : "";
-  const profileCode = String(form.get("respondentType") ?? "");
+  const profileCode = String(form.get("respondent_type") ?? "");
   const profileOption = profileQuestion?.options.find(
     (option) => option.id === profileValue || option.code === profileCode,
   );

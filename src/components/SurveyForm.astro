@@ -23,7 +23,7 @@ const respondentTypeQuestion = questions.find((q) => q.code === "respondent_type
 
 <form novalidate class="space-y-5 sm:space-y-7" id="survey-form">
   <input type="hidden" name="studySlug" value={studySlug} />
-  <input type="hidden" name="respondentType" id="respondentType" value="" />
+  <input type="hidden" name="respondent_type" id="respondent_type" value="" />
   <div class="absolute -left-[9999px]" aria-hidden="true"><label>Website<input type="text" name="website" tabindex="-1" autocomplete="off" /></label></div>
   <input type="hidden" name="durationMs" id="durationMs" value="0" />
 
@@ -70,7 +70,7 @@ const respondentTypeQuestion = questions.find((q) => q.code === "respondent_type
 
   function controls(fieldset) { return Array.from(fieldset.querySelectorAll("input, select, textarea")); }
   function respondentType() { const selected = respondentTypeId && form?.querySelector(`[name="q_${respondentTypeId}"]:checked, [name="q_${respondentTypeId}"] option:checked`); return selected instanceof HTMLElement ? selected.getAttribute("data-option-code") : null; }
-  function syncRespondentType() { const input = document.getElementById("respondentType"); if (input instanceof HTMLInputElement) input.value = respondentType() || ""; }
+  function syncRespondentType() { const input = document.getElementById("respondent_type"); if (input instanceof HTMLInputElement) input.value = respondentType() || ""; }
   function answered(fieldset) {
     const id = fieldset.getAttribute("data-question-id"); if (!id) return false;
     const radios = form?.querySelectorAll(`input[name="q_${id}"][type="radio"]`); const checks = form?.querySelectorAll(`input[name="q_${id}"][type="checkbox"]`);
