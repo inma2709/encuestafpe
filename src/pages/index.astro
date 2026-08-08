@@ -4,89 +4,1450 @@ import Icon from "@/components/Icon.astro";
 import { loadSurveySessions } from "@/services";
 
 const studySlug = "docentes-fpe-2026";
+
 let participantCount = 0;
 
 try {
-  const { sessions } = await loadSurveySessions(studySlug);
-  participantCount = sessions.length;
+  const result = await loadSurveySessions(studySlug);
+
+  if (Array.isArray(result)) {
+    participantCount = result.length;
+  } else if (result && typeof result === "object") {
+    const value =
+      (result as any).count ??
+      (result as any).participantCount ??
+      (Array.isArray((result as any).sessions)
+        ? (result as any).sessions.length
+        : undefined) ??
+      (Array.isArray((result as any).data)
+        ? (result as any).data.length
+        : undefined);
+
+    participantCount = Number(value ?? 0);
+  }
 } catch (error) {
-  console.error("Error al obtener contador de participantes:", error);
+  console.error("No se pudo cargar el número de participantes", error);
 }
 ---
 
-<BaseLayout width="wide">
-  <section class="home-hero">
-    <div class="shell-wide home-hero__grid">
-      <div class="home-hero__content fade-up">
-        <p class="eyebrow">Estudio independiente · España · Agosto 2026</p>
-        <h1 class="home-hero__title text-balance">
-          ¿Cómo es realmente trabajar como docente de FPE?
-        </h1>
-        <p class="home-hero__intro">
-          Este estudio recoge la experiencia de docentes de Formación Profesional para el Empleo para conocer su realidad profesional, detectar tendencias y hacerlas visibles.
-        </p>
-        <p class="lede home-hero__lede">
-          Participa en una encuesta anónima de pocos minutos y ayuda a construir, con datos del propio colectivo, una visión más clara de las condiciones y la situación de quienes impartimos FPE.
-        </p>
+<BaseLayout>
+  <main class="home">
 
-        <div class="home-hero__actions">
-          <a href="/estudios/docentes-fpe-2026/participar" class="btn btn-primary btn-full sm:w-auto">
-            Participar en la encuesta
-            <Icon name="arrow-right" size={18} />
-          </a>
-          <a href="/informes" class="editorial-link">
-            Consultar informes
-            <Icon name="arrow-right" size={16} />
-          </a>
+    <!-- =========================================================
+         HERO
+    ========================================================== -->
+    <section class="hero">
+      <div class="hero__inner">
+
+        <div class="hero__content">
+          <p class="eyebrow">
+            <span></span>
+            Estudio independiente · FPE · 2026
+          </p>
+
+          <h1 class="hero__title">
+            La realidad profesional
+            <span>de quienes enseñan</span>
+            en la FPE.
+          </h1>
+
+          <div class="hero__intro">
+            <p>
+              Un estudio independiente para conocer cómo trabajan realmente
+              los docentes de Formación Profesional para el Empleo:
+              condiciones, experiencia, contratación, retribución y
+              percepción de la profesión.
+            </p>
+          </div>
+
+          <div class="hero__actions">
+            <a
+              href="/estudios/docentes-fpe-2026/participar"
+              class="primary-action"
+            >
+              <span>Participar en la encuesta</span>
+              <Icon name="arrow-right" size={18} />
+            </a>
+
+            <a href="/informes" class="secondary-action">
+              Consultar informes
+              <Icon name="arrow-right" size={15} />
+            </a>
+          </div>
+
+          <dl
+            class="hero__assurances"
+            aria-label="Características de la encuesta"
+          >
+            <div>
+              <dt>
+                <Icon name="shield-check" size={17} />
+                Anónima
+              </dt>
+              <dd>
+                No solicitamos nombre, email ni otros datos identificativos.
+                La veracidad y utilidad del estudio está basada en la honestidad de los participantes.
+              </dd>
+            </div>
+
+            <div>
+              <dt>
+                <Icon name="users" size={17} />
+                Abierta
+              </dt>
+              <dd>
+                Sin registro previo y diseñada para completarse en pocos minutos.
+              </dd>
+            </div>
+          </dl>
         </div>
 
-        <dl class="home-hero__details" aria-label="Características de la encuesta">
-          <div>
-            <dt><Icon name="shield-check" size={17} /> Anonimato</dt>
-            <dd>No pedimos datos identificativos.</dd>
+        <figure class="hero__visual">
+          <div class="hero__image-wrap">
+            <span class="hero__index" aria-hidden="true">01</span>
+
+            <img
+              src="/encuestas.png"
+              width="920"
+              height="920"
+              alt="Ilustración de docentes participando en una encuesta"
+              class="hero__image"
+            />
           </div>
-          <div>
-            <dt><Icon name="users" size={17} /> Participación</dt>
-            <dd>Sin registro y en pocos minutos.</dd>
+
+          <figcaption>
+            Una mirada colectiva sobre una profesión de la que todavía sabemos
+            demasiado poco.
+          </figcaption>
+        </figure>
+
+      </div>
+    </section>
+
+
+    <!-- =========================================================
+         DATOS
+    ========================================================== -->
+    <section class="stats-section" aria-labelledby="datos-estudio">
+      <div class="page-shell">
+
+        <div class="section-heading section-heading--compact">
+          <p class="section-number">Datos del estudio</p>
+
+          <h2 id="datos-estudio">
+            Una fotografía construida
+            <span>desde la experiencia docente.</span>
+          </h2>
+        </div>
+
+        <dl class="stats">
+          <div class="stat">
+            <dt>{participantCount}</dt>
+            <dd>
+              <strong>Docentes participantes</strong>
+              <span>Respuestas incorporadas al estudio</span>
+            </dd>
+          </div>
+
+          <div class="stat">
+            <dt>17</dt>
+            <dd>
+              <strong>Comunidades autónomas</strong>
+              <span>Ámbito territorial del estudio</span>
+            </dd>
+          </div>
+
+          <div class="stat">
+            <dt>26</dt>
+            <dd>
+              <strong>Familias profesionales</strong>
+              <span>Representadas en la FPE</span>
+            </dd>
           </div>
         </dl>
+
       </div>
+    </section>
 
-      <figure class="home-hero__figure fade-up" style="animation-delay: 100ms;">
-        <img
-          src="/encuestas.png"
-          width="920"
-          height="920"
-          alt="Ilustración de docentes participando en una encuesta"
-          class="home-hero__image"
-        />
-        <figcaption>Una mirada colectiva sobre la docencia en FPE.</figcaption>
-      </figure>
-    </div>
-  </section>
 
-  <section class="home-evidence" aria-labelledby="datos-title">
-    <div class="shell-wide">
-      <div class="home-evidence__heading">
-        <p class="eyebrow">El estudio en cifras</p>
-        <h2 id="datos-title">Datos para comprender una profesión diversa</h2>
-        <p>Las respuestas anónimas se convierten en una fotografía compartida de la docencia en Formación Profesional para el Empleo.</p>
+    <!-- =========================================================
+         POR QUÉ
+    ========================================================== -->
+    <section class="why">
+      <div class="page-shell why__grid">
+
+        <div class="why__label">
+          <p class="section-number">02 · El punto de partida</p>
+        </div>
+
+        <div class="why__statement">
+          <h2>
+            Sabemos mucho sobre lo que debe impartirse.
+            <span>
+              Sabemos bastante menos sobre las condiciones en las que se enseña.
+            </span>
+          </h2>
+        </div>
+
+        <div class="why__copy">
+          <p>
+            La Formación Profesional para el Empleo cuenta con normativa,
+            programas, certificados, requisitos docentes y sistemas de
+            evaluación muy definidos.
+          </p>
+
+          <p>
+            Sin embargo, existe mucha menos información accesible sobre la
+            realidad cotidiana de sus docentes: cuánto trabajan, cómo son
+            contratados, qué retribuciones reciben, cuánto tiempo dedican fuera
+            del aula o cómo valoran sus condiciones profesionales.
+          </p>
+
+          <p class="why__emphasis">
+            Este estudio nace para convertir esas experiencias individuales
+            en datos que puedan observarse de forma colectiva.
+          </p>
+        </div>
+
       </div>
+    </section>
 
-      <dl class="home-stats">
-        <div class="fade-up" style="animation-delay: 100ms;">
-          <dt>{participantCount}</dt>
-          <dd>Docentes participantes</dd>
+
+    <!-- =========================================================
+         HONESTIDAD
+    ========================================================== -->
+    <section class="honesty">
+      <div class="page-shell honesty__grid">
+
+        <div class="honesty__aside">
+          <p class="section-number">03 · Un compromiso compartido</p>
+
+          <span class="honesty__mark" aria-hidden="true">
+            “
+          </span>
         </div>
-        <div class="fade-up" style="animation-delay: 160ms;">
-          <dt>17</dt>
-          <dd>Comunidades autónomas</dd>
+
+        <div class="honesty__content">
+          <p class="honesty__kicker">
+            La privacidad depende de una decisión consciente:
+            no pedirte que te identifiques.
+          </p>
+
+          <h2>
+            Por eso confiamos
+            <span>en la honestidad del gremio.</span>
+          </h2>
+
+          <div class="honesty__body">
+            <p>
+              Para proteger tu privacidad no exigimos registro, nombre ni correo
+              electrónico. Eso significa que este estudio se apoya también en
+              la responsabilidad y el buen hacer de quienes participan.
+            </p>
+
+            <p>
+              Intenta responder de la forma más sincera posible, incluso cuando
+              una respuesta no sea la que te gustaría dar. Solo con respuestas
+              honestas podremos conocer la situación real de la docencia en FPE
+              y detectar qué aspectos necesitan mejorar.
+            </p>
+
+            <p>
+              Saber que otros compañeros viven situaciones similares también
+              tiene valor. Los datos no solo sirven para medir una realidad:
+              pueden ayudarnos a comprender que muchos problemas no son
+              individuales y favorecer una mirada más colaborativa sobre la
+              profesión.
+            </p>
+          </div>
+
+          <div class="honesty__promise">
+            <span>Tu respuesta es anónima.</span>
+            <strong>Su valor depende de que sea sincera.</strong>
+          </div>
         </div>
-        <div class="fade-up" style="animation-delay: 220ms;">
-          <dt>26</dt>
-          <dd>Familias profesionales</dd>
+
+      </div>
+    </section>
+
+
+    <!-- =========================================================
+         QUÉ QUEREMOS CONOCER
+    ========================================================== -->
+    <section class="topics">
+      <div class="page-shell">
+
+        <div class="section-heading">
+          <p class="section-number">04 · Qué queremos conocer</p>
+
+          <h2>
+            Más allá de impartir horas.
+          </h2>
+
+          <p>
+            El estudio analiza distintas dimensiones que forman parte del
+            ejercicio profesional de la docencia en FPE.
+          </p>
         </div>
-      </dl>
-    </div>
-  </section>
+
+        <div class="topics__list">
+
+          <article class="topic">
+            <span class="topic__number">01</span>
+            <div>
+              <h3>Perfil profesional</h3>
+              <p>
+                Experiencia docente, especialización y familias profesionales
+                en las que se desarrolla la actividad.
+              </p>
+            </div>
+          </article>
+
+          <article class="topic">
+            <span class="topic__number">02</span>
+            <div>
+              <h3>Contratación</h3>
+              <p>
+                Modalidades de relación laboral, continuidad, jornadas y
+                características de los encargos docentes.
+              </p>
+            </div>
+          </article>
+
+          <article class="topic">
+            <span class="topic__number">03</span>
+            <div>
+              <h3>Retribución</h3>
+              <p>
+                Percepción sobre los salarios, negociación de condiciones y
+                diferencias entre formas de contratación.
+              </p>
+            </div>
+          </article>
+
+          <article class="topic">
+            <span class="topic__number">04</span>
+            <div>
+              <h3>Trabajo invisible</h3>
+              <p>
+                Preparación de contenidos, seguimiento, evaluación y otras
+                tareas que se realizan fuera de las horas de impartición.
+              </p>
+            </div>
+          </article>
+
+          <article class="topic">
+            <span class="topic__number">05</span>
+            <div>
+              <h3>Percepción profesional</h3>
+              <p>
+                Estabilidad, reconocimiento, satisfacción y expectativas de
+                quienes trabajan en el sector.
+              </p>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- =========================================================
+         METODOLOGÍA / GARANTÍAS
+    ========================================================== -->
+    <section class="method">
+      <div class="page-shell method__grid">
+
+        <div class="method__intro">
+          <p class="section-number">05 · Criterios</p>
+
+          <h2>
+            Datos útiles,
+            <span>sin identificar a quien responde.</span>
+          </h2>
+        </div>
+
+        <div class="method__principles">
+
+          <div class="principle">
+            <span>01</span>
+            <div>
+              <h3>Participación anónima</h3>
+              <p>
+                La encuesta no solicita nombre, correo electrónico ni otros
+                datos directamente identificativos.
+              </p>
+            </div>
+          </div>
+
+          <div class="principle">
+            <span>02</span>
+            <div>
+              <h3>Resultados agregados</h3>
+              <p>
+                Las respuestas se analizan conjuntamente para mostrar patrones,
+                no trayectorias individuales.
+              </p>
+            </div>
+          </div>
+
+          <div class="principle">
+            <span>03</span>
+            <div>
+              <h3>Metodología pública</h3>
+              <p>
+                Los criterios utilizados para interpretar y publicar los datos
+                pueden consultarse de forma transparente.
+              </p>
+            </div>
+          </div>
+
+          <a href="/metodologia" class="method__link">
+            Consultar metodología
+            <Icon name="arrow-right" size={15} />
+          </a>
+
+        </div>
+      </div>
+    </section>
+
+
+    <!-- =========================================================
+         CTA FINAL
+    ========================================================== -->
+    <section class="closing">
+      <div class="page-shell">
+        <div class="closing__inner">
+
+          <div>
+            <p class="section-number">Participa</p>
+
+            <h2>
+              Una respuesta más
+              <span>también cambia la fotografía.</span>
+            </h2>
+          </div>
+
+          <div class="closing__action">
+            <p>
+              Si trabajas como docente de Formación Profesional para el Empleo,
+              tu experiencia puede ayudar a construir una imagen más precisa
+              del sector.
+            </p>
+
+            <a
+              href="/estudios/docentes-fpe-2026/participar"
+              class="primary-action"
+            >
+              <span>Participar en el estudio</span>
+              <Icon name="arrow-right" size={18} />
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
 </BaseLayout>
+
+
+<style>
+  /* =========================================================
+     BASE
+  ========================================================== */
+
+  .home {
+    overflow: hidden;
+    color: var(--color-ink);
+  }
+
+  .page-shell {
+    width: min(1180px, calc(100% - 40px));
+    margin-inline: auto;
+  }
+
+  .section-number {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 650;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-brand);
+  }
+
+
+  /* =========================================================
+     HERO
+  ========================================================== */
+
+  .hero {
+    position: relative;
+    padding: clamp(64px, 8vw, 112px) 0 clamp(72px, 9vw, 128px);
+  }
+
+  .hero::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 1px;
+    background: var(--color-line);
+  }
+
+  .hero__inner {
+    width: min(1240px, calc(100% - 40px));
+    margin-inline: auto;
+
+    display: grid;
+    grid-template-columns: minmax(0, 1.13fr) minmax(340px, 0.87fr);
+    gap: clamp(50px, 7vw, 110px);
+    align-items: center;
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    margin: 0 0 30px;
+
+    font-size: 0.72rem;
+    font-weight: 650;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+
+    color: var(--color-brand);
+  }
+
+  .eyebrow span {
+    width: 38px;
+    height: 1px;
+    background: currentColor;
+  }
+
+  .hero__title {
+    max-width: 760px;
+    margin: 0;
+
+    font-family: var(--font-display, inherit);
+    font-size: clamp(3rem, 5.3vw, 5.65rem);
+    font-weight: 500;
+    line-height: 0.98;
+    letter-spacing: -0.048em;
+
+    color: var(--color-ink);
+  }
+
+  .hero__title span {
+    display: block;
+    color: var(--color-brand-dark);
+  }
+
+  .hero__intro {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 530px);
+    margin-top: 36px;
+  }
+
+  .hero__intro::before {
+    content: "";
+    width: 44px;
+    height: 1px;
+    margin-top: 13px;
+    background: var(--color-brand);
+  }
+
+  .hero__intro p {
+    margin: 0;
+    font-size: clamp(1rem, 1.4vw, 1.12rem);
+    line-height: 1.75;
+    color: var(--color-ink-muted);
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 24px;
+
+    margin-top: 38px;
+    padding-left: 72px;
+  }
+
+  .primary-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+
+    min-height: 52px;
+    padding: 0 19px 0 22px;
+
+    background: var(--color-brand-dark);
+    color: white;
+
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 600;
+
+    border: 1px solid var(--color-brand-dark);
+
+    transition:
+      background-color 180ms ease,
+      transform 180ms ease,
+      border-color 180ms ease;
+  }
+
+  .primary-action:hover {
+    background: var(--color-brand);
+    border-color: var(--color-brand);
+    transform: translateY(-2px);
+  }
+
+  .secondary-action,
+  .method__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+
+    color: var(--color-ink);
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 600;
+
+    border-bottom: 1px solid var(--color-line);
+    padding-bottom: 5px;
+
+    transition:
+      color 160ms ease,
+      border-color 160ms ease;
+  }
+
+  .secondary-action:hover,
+  .method__link:hover {
+    color: var(--color-brand);
+    border-color: var(--color-brand);
+  }
+
+  .hero__assurances {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    max-width: 650px;
+
+    margin: 56px 0 0;
+    padding: 22px 0 0 72px;
+
+    border-top: 1px solid var(--color-line);
+  }
+
+  .hero__assurances > div {
+    padding-right: 28px;
+  }
+
+  .hero__assurances > div + div {
+    padding-left: 28px;
+    border-left: 1px solid var(--color-line);
+  }
+
+  .hero__assurances dt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    margin-bottom: 7px;
+
+    font-size: 0.79rem;
+    font-weight: 700;
+    color: var(--color-ink);
+  }
+
+  .hero__assurances dd {
+    margin: 0;
+    font-size: 0.78rem;
+    line-height: 1.55;
+    color: var(--color-ink-muted);
+  }
+
+
+  /* Hero visual */
+
+  .hero__visual {
+    position: relative;
+    margin: 34px 0 0;
+  }
+
+  .hero__image-wrap {
+    position: relative;
+  }
+
+  .hero__image-wrap::before {
+    content: "";
+    position: absolute;
+
+    width: 72%;
+    height: 75%;
+
+    top: 12%;
+    left: 11%;
+
+    background: var(--color-brand-soft);
+    opacity: 0.5;
+
+    transform: rotate(-2.5deg);
+  }
+
+  .hero__image {
+    position: relative;
+    z-index: 1;
+
+    display: block;
+    width: min(100%, 520px);
+    height: auto;
+
+    margin-inline: auto;
+  }
+
+  .hero__index {
+    position: absolute;
+    z-index: 2;
+    top: -24px;
+    right: 0;
+
+    font-family: var(--font-display, inherit);
+    font-size: 0.8rem;
+    color: var(--color-brand);
+  }
+
+  .hero__visual figcaption {
+    position: relative;
+
+    width: 75%;
+    max-width: 340px;
+
+    margin: -4px 0 0 auto;
+    padding-top: 16px;
+
+    border-top: 1px solid var(--color-line);
+
+    font-size: 0.74rem;
+    line-height: 1.55;
+    color: var(--color-ink-muted);
+  }
+
+
+  /* =========================================================
+     STATS
+  ========================================================== */
+
+  .stats-section {
+    padding: clamp(72px, 9vw, 120px) 0;
+  }
+
+  .section-heading {
+    max-width: 720px;
+    margin-bottom: 56px;
+  }
+
+  .section-heading--compact {
+    margin-bottom: 44px;
+  }
+
+  .section-heading h2 {
+    margin: 14px 0 0;
+
+    font-family: var(--font-display, inherit);
+    font-size: clamp(2.2rem, 4vw, 3.7rem);
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+  }
+
+  .section-heading h2 span {
+    display: block;
+    color: var(--color-ink-muted);
+  }
+
+  .section-heading > p:last-child {
+    max-width: 580px;
+
+    margin: 23px 0 0;
+
+    color: var(--color-ink-muted);
+    line-height: 1.7;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr 1fr;
+
+    margin: 0;
+    border-top: 1px solid var(--color-ink);
+  }
+
+  .stat {
+    padding: 28px 32px 12px 0;
+  }
+
+  .stat + .stat {
+    padding-left: 32px;
+    border-left: 1px solid var(--color-line);
+  }
+
+  .stat dt {
+    margin-bottom: 30px;
+
+    font-family: var(--font-display, inherit);
+    font-size: clamp(3.6rem, 7vw, 6.5rem);
+    font-weight: 400;
+    line-height: 1;
+
+    color: var(--color-brand-dark);
+  }
+
+  .stat dd {
+    margin: 0;
+  }
+
+  .stat strong,
+  .stat span {
+    display: block;
+  }
+
+  .stat strong {
+    font-size: 0.86rem;
+    font-weight: 700;
+  }
+
+  .stat span {
+    margin-top: 5px;
+    font-size: 0.76rem;
+    color: var(--color-ink-muted);
+  }
+
+
+  /* =========================================================
+     WHY
+  ========================================================== */
+
+  .why {
+    padding: clamp(80px, 10vw, 140px) 0;
+
+    background: var(--color-brand-dark);
+    color: white;
+  }
+
+  .why__grid {
+    display: grid;
+    grid-template-columns: 0.55fr 1.7fr 1fr;
+    gap: clamp(34px, 5vw, 76px);
+  }
+
+  .why .section-number {
+    color: rgba(255, 255, 255, 0.58);
+  }
+
+  .why__statement h2 {
+    margin: 0;
+
+    font-family: var(--font-display, inherit);
+    font-size: clamp(2.5rem, 4.3vw, 4.3rem);
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.038em;
+  }
+
+  .why__statement h2 span {
+    display: block;
+    margin-top: 14px;
+
+    color: rgba(255, 255, 255, 0.62);
+  }
+
+  .why__copy {
+    padding-top: 8px;
+  }
+
+  .why__copy p {
+    margin: 0 0 22px;
+
+    font-size: 0.9rem;
+    line-height: 1.72;
+
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .why__copy .why__emphasis {
+    margin-top: 35px;
+    padding-top: 20px;
+
+    border-top: 1px solid rgba(255, 255, 255, 0.22);
+
+    color: white;
+    font-weight: 550;
+  }
+
+
+  /* =========================================================
+     HONESTY
+  ========================================================== */
+
+  .honesty {
+    padding: clamp(88px, 10vw, 140px) 0;
+    background: #f6f7f2;
+  }
+
+  .honesty__grid {
+    display: grid;
+    grid-template-columns: 0.65fr 2.1fr;
+    gap: clamp(45px, 8vw, 120px);
+    align-items: start;
+  }
+
+  .honesty__aside {
+    position: relative;
+    min-height: 180px;
+  }
+
+  .honesty__mark {
+    display: block;
+
+    margin-top: 34px;
+
+    font-family: Georgia, serif;
+    font-size: clamp(6rem, 11vw, 10rem);
+    line-height: 0.8;
+
+    color: var(--color-brand-soft);
+  }
+
+  .honesty__content {
+    max-width: 800px;
+  }
+
+  .honesty__kicker {
+    max-width: 620px;
+
+    margin: 0 0 16px;
+
+    color: var(--color-brand);
+    font-size: 0.84rem;
+    line-height: 1.6;
+    font-weight: 650;
+  }
+
+  .honesty__content h2 {
+    margin: 0;
+
+    max-width: 760px;
+
+    font-family: var(--font-display, inherit);
+    font-size: clamp(2.7rem, 5vw, 4.8rem);
+    font-weight: 500;
+    line-height: 1.02;
+    letter-spacing: -0.042em;
+  }
+
+  .honesty__content h2 span {
+    display: block;
+    color: var(--color-brand-dark);
+  }
+
+  .honesty__body {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 42px;
+
+    margin-top: 45px;
+
+    border-top: 1px solid var(--color-line);
+  }
+
+  .honesty__body p {
+    margin: 0;
+    padding-top: 22px;
+
+    font-size: 0.9rem;
+    line-height: 1.78;
+
+    color: var(--color-ink-muted);
+  }
+
+  .honesty__body p:nth-child(3) {
+    grid-column: 2;
+
+    margin-top: 22px;
+    padding-top: 22px;
+
+    border-top: 1px solid var(--color-line);
+
+    color: var(--color-ink);
+  }
+
+  .honesty__promise {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 10px 30px;
+
+    margin-top: 48px;
+    padding: 22px 0;
+
+    border-top: 1px solid var(--color-ink);
+    border-bottom: 1px solid var(--color-ink);
+  }
+
+  .honesty__promise span,
+  .honesty__promise strong {
+    font-size: 0.88rem;
+  }
+
+  .honesty__promise span {
+    color: var(--color-ink-muted);
+  }
+
+  .honesty__promise strong {
+    color: var(--color-brand-dark);
+  }
+
+
+  /* =========================================================
+     TOPICS
+  ========================================================== */
+
+  .topics {
+    padding: clamp(90px, 11vw, 150px) 0;
+  }
+
+  .topics__list {
+    margin-left: min(20%, 220px);
+    border-top: 1px solid var(--color-ink);
+  }
+
+  .topic {
+    display: grid;
+    grid-template-columns: 100px minmax(0, 1fr);
+
+    gap: 22px;
+
+    padding: 30px 0;
+
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .topic__number {
+    padding-top: 4px;
+
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+
+    color: var(--color-brand);
+  }
+
+  .topic h3 {
+    margin: 0;
+
+    font-family: var(--font-display, inherit);
+    font-size: clamp(1.35rem, 2vw, 1.8rem);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+
+  .topic p {
+    max-width: 580px;
+
+    margin: 9px 0 0;
+
+    color: var(--color-ink-muted);
+    font-size: 0.88rem;
+    line-height: 1.65;
+  }
+
+
+  /* =========================================================
+     METHOD
+  ========================================================== */
+
+  .method {
+    padding: clamp(86px, 10vw, 140px) 0;
+
+    background: color-mix(
+      in srgb,
+      var(--color-brand-soft) 30%,
+      white
+    );
+  }
+
+  .method__grid {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: clamp(60px, 9vw, 130px);
+  }
+
+  .method__intro h2 {
+    max-width: 500px;
+
+    margin: 16px 0 0;
+
+    font-family: var(--font-display, inherit);
+    font-size: clamp(2.4rem, 4vw, 4rem);
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.038em;
+  }
+
+  .method__intro h2 span {
+    display: block;
+    color: var(--color-ink-muted);
+  }
+
+  .method__principles {
+    border-top: 1px solid var(--color-ink);
+  }
+
+  .principle {
+    display: grid;
+    grid-template-columns: 62px 1fr;
+    gap: 22px;
+
+    padding: 25px 0;
+
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .principle > span {
+    padding-top: 3px;
+
+    color: var(--color-brand);
+    font-size: 0.7rem;
+  }
+
+  .principle h3 {
+    margin: 0;
+
+    font-size: 0.94rem;
+    font-weight: 700;
+  }
+
+  .principle p {
+    max-width: 500px;
+
+    margin: 7px 0 0;
+
+    font-size: 0.84rem;
+    line-height: 1.65;
+
+    color: var(--color-ink-muted);
+  }
+
+  .method__link {
+    margin-top: 28px;
+  }
+
+
+  /* =========================================================
+     CLOSING
+  ========================================================== */
+
+  .closing {
+    padding: clamp(90px, 10vw, 140px) 0;
+  }
+
+  .closing__inner {
+    display: grid;
+    grid-template-columns: 1.25fr 0.75fr;
+
+    gap: clamp(50px, 9vw, 130px);
+
+    padding-top: 35px;
+    border-top: 1px solid var(--color-ink);
+  }
+
+  .closing h2 {
+    max-width: 670px;
+
+    margin: 15px 0 0;
+
+    font-family: var(--font-display, inherit);
+    font-size: clamp(2.6rem, 4.6vw, 4.5rem);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .closing h2 span {
+    display: block;
+    color: var(--color-brand);
+  }
+
+  .closing__action {
+    padding-top: 27px;
+  }
+
+  .closing__action p {
+    margin: 0 0 28px;
+
+    font-size: 0.9rem;
+    line-height: 1.7;
+
+    color: var(--color-ink-muted);
+  }
+
+
+  /* =========================================================
+     FOCUS
+  ========================================================== */
+
+  a:focus-visible {
+    outline: 3px solid var(--color-brand);
+    outline-offset: 4px;
+  }
+
+
+  /* =========================================================
+     TABLET
+  ========================================================== */
+
+  @media (max-width: 900px) {
+    .hero__inner {
+      grid-template-columns: 1fr;
+    }
+
+    .hero__content {
+      max-width: 720px;
+    }
+
+    .hero__visual {
+      width: min(75%, 550px);
+      margin: 40px 0 0 auto;
+    }
+
+    .why__grid {
+      grid-template-columns: 1fr 2fr;
+    }
+
+    .why__copy {
+      grid-column: 2;
+    }
+
+    .honesty__grid {
+      grid-template-columns: 0.4fr 2fr;
+      gap: 45px;
+    }
+
+    .method__grid,
+    .closing__inner {
+      grid-template-columns: 1fr;
+      gap: 50px;
+    }
+
+    .topics__list {
+      margin-left: 8%;
+    }
+  }
+
+
+  /* =========================================================
+     MOBILE
+  ========================================================== */
+
+  @media (max-width: 640px) {
+    .page-shell,
+    .hero__inner {
+      width: min(100% - 30px, 1180px);
+    }
+
+    .hero {
+      padding-top: 48px;
+    }
+
+    .eyebrow {
+      margin-bottom: 24px;
+    }
+
+    .hero__title {
+      font-size: clamp(2.85rem, 13vw, 4rem);
+      line-height: 0.98;
+    }
+
+    .hero__intro {
+      display: block;
+      margin-top: 27px;
+    }
+
+    .hero__intro::before {
+      display: none;
+    }
+
+    .hero__actions {
+      align-items: stretch;
+      flex-direction: column;
+      gap: 18px;
+
+      padding-left: 0;
+      margin-top: 30px;
+    }
+
+    .primary-action {
+      width: 100%;
+    }
+
+    .secondary-action {
+      width: fit-content;
+    }
+
+    .hero__assurances {
+      grid-template-columns: 1fr;
+      gap: 18px;
+
+      padding: 20px 0 0;
+      margin-top: 40px;
+    }
+
+    .hero__assurances > div {
+      padding: 0;
+    }
+
+    .hero__assurances > div + div {
+      padding: 18px 0 0;
+      border-left: 0;
+      border-top: 1px solid var(--color-line);
+    }
+
+    .hero__visual {
+      width: 88%;
+      margin: 48px 0 0 auto;
+    }
+
+    .hero__visual figcaption {
+      width: 90%;
+    }
+
+
+    /* stats */
+
+    .stats {
+      grid-template-columns: 1fr;
+    }
+
+    .stat,
+    .stat + .stat {
+      display: grid;
+      grid-template-columns: 115px 1fr;
+      align-items: center;
+
+      padding: 24px 0;
+
+      border-left: 0;
+      border-bottom: 1px solid var(--color-line);
+    }
+
+    .stat dt {
+      margin: 0;
+      font-size: 3.5rem;
+    }
+
+
+    /* why */
+
+    .why__grid {
+      grid-template-columns: 1fr;
+    }
+
+    .why__copy {
+      grid-column: auto;
+    }
+
+    .why__statement h2 {
+      font-size: 2.6rem;
+    }
+
+
+    /* honesty */
+
+    .honesty__grid {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    .honesty__aside {
+      min-height: auto;
+    }
+
+    .honesty__mark {
+      display: none;
+    }
+
+    .honesty__content h2 {
+      font-size: 2.75rem;
+    }
+
+    .honesty__body {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    .honesty__body p + p {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--color-line);
+    }
+
+    .honesty__body p:nth-child(3) {
+      grid-column: auto;
+    }
+
+    .honesty__promise {
+      flex-direction: column;
+    }
+
+
+    /* topics */
+
+    .topics__list {
+      margin-left: 0;
+    }
+
+    .topic {
+      grid-template-columns: 48px 1fr;
+    }
+
+
+    /* method */
+
+    .method__grid {
+      gap: 48px;
+    }
+
+    .principle {
+      grid-template-columns: 42px 1fr;
+    }
+
+
+    /* closing */
+
+    .closing__inner {
+      gap: 32px;
+    }
+
+    .closing h2 {
+      font-size: 2.8rem;
+    }
+  }
+
+
+  /* =========================================================
+     REDUCED MOTION
+  ========================================================== */
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
