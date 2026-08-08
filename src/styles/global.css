@@ -495,12 +495,36 @@
     display: block;
   }
 
+  .submission-status {
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    padding: 0.875rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .submission-status[data-state="success"] {
+    border-color: rgb(45 103 96 / 0.25);
+    background: rgb(45 103 96 / 0.08);
+    color: var(--color-brand-dark);
+  }
+
+  .submission-status[data-state="error"] {
+    border-color: rgb(143 61 53 / 0.25);
+    background: rgb(143 61 53 / 0.06);
+    color: var(--color-danger);
+  }
+
   .chapter.locked {
-    opacity: 0.4;
-    pointer-events: none;
-    user-select: none;
+    opacity: 0.62;
+    cursor: not-allowed;
     transform: translateY(0) !important;
-    filter: grayscale(0.3);
+    filter: grayscale(0.15);
+  }
+
+  .chapter.locked .option,
+  .chapter.locked .field {
+    cursor: not-allowed;
   }
 
   .chapter.locked legend {

@@ -12,6 +12,7 @@ if (!slug) {
 }
 
 const token = getUnlockCookie(Astro.cookies, slug);
+const submitted = Astro.url.searchParams.get("submitted") === "1";
 let locked = false;
 let results;
 let errorMessage: string | undefined;
@@ -57,6 +58,16 @@ try {
     ) : results ? (
       <section class="space-y-10">
         <header class="fade-up space-y-4">
+          {
+            submitted && (
+              <p
+                class="rounded-[var(--radius-md)] border border-[var(--color-brand)]/25 bg-[rgb(45_103_96/0.08)] px-4 py-3 text-sm font-semibold text-[var(--color-brand-dark)]"
+                role="status"
+              >
+                Encuesta enviada correctamente. Gracias por participar.
+              </p>
+            )
+          }
           <p class="badge badge-accent">Gracias por participar</p>
           <h1 class="font-display text-2xl sm:text-4xl lg:text-5xl text-balance">Resultados agregados</h1>
           <p class="text-[var(--color-ink-muted)]">{results.studyTitle}</p>

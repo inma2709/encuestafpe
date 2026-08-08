@@ -333,8 +333,8 @@ const questionsDef = [
     options: [
       ["ent_public_admin", "Administración pública (ayuntamiento, comunidad autónoma, etc.)"],
       ["ent_chamber", "Cámara de Comercio"],
-      ["ent_training_center", "Centro o empresa de formación"],
-      ["ent_private_company", "Empresa privada (formación interna)"],
+      ["ent_training_center", "Academia o centro privado de formación"],
+      ["ent_private_company", "Formación interna de empresas"],
       ["ent_ett", "ETT"],
       ["ent_social_partner", "Organización empresarial o sindical"],
       ["ent_ngo", "Asociación, fundación u ONG"],

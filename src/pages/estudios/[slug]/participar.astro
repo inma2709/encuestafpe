@@ -2,8 +2,8 @@
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import SurveyForm from "@/components/SurveyForm.astro";
 import { setUnlockCookie } from "@/lib/cookies";
-import { DomainError, type AnswerInput } from "@/types";
-import { getActiveSurvey, submitSurvey } from "@/services";
+import { DomainError } from "@/types";
+import { getActiveSurvey, submitSurveyForm } from "@/services";
 
 const { slug } = Astro.params;
 if (!slug) {
@@ -15,56 +15,17 @@ let errorMessage: string | undefined;
 if (Astro.request.method === "POST") {
   try {
     const form = await Astro.request.formData();
-    const studySlug = String(form.get("studySlug") ?? slug);
-    const website = String(form.get("website") ?? "");
-    const durationRaw = String(form.get("durationMs") ?? "0");
-    const durationMs = Number.parseInt(durationRaw, 10);
-
-    const active = await getActiveSurvey(studySlug);
-    const answers: AnswerInput[] = [];
-
-    for (const question of active.questions) {
-      const key = `q_${question.id}`;
-
-      if (question.type === "multi") {
-        const values = form.getAll(key).map(String).filter(Boolean);
-        if (values.length > 0 || question.required) {
-          answers.push({ questionId: question.id, optionIds: values });
-        }
-        continue;
-      }
-
-      const value = form.get(key);
-      if (value == null || String(value).trim() === "") {
-        continue;
-      }
-
-      if (question.type === "text") {
-        answers.push({ questionId: question.id, valueText: String(value) });
-      } else if (question.type === "number") {
-        answers.push({
-          questionId: question.id,
-          valueNumber: Number(value),
-        });
-      } else {
-        answers.push({ questionId: question.id, optionId: String(value) });
-      }
-    }
-
-    const result = await submitSurvey({
-      studySlug,
-      answers,
-      website,
-      durationMs: Number.isFinite(durationMs) ? durationMs : undefined,
-    });
+    const result = await submitSurveyForm(form, slug);
 
     setUnlockCookie(Astro.cookies, result.studySlug, result.unlockToken);
-    return Astro.redirect(`/estudios/${result.studySlug}/resultados`);
+    return Astro.redirect(`/estudios/${result.studySlug}/resultados?submitted=1`);
   } catch (err) {
-    errorMessage =
-      err instanceof DomainError
-        ? err.message
-        : "No se pudo enviar la encuesta. Inténtalo de nuevo.";
+    console.error("Survey submission failed", {
+      studySlug: slug,
+      error: err,
+    });
+    Astro.response.status = err instanceof DomainError && err.code === "VALIDATION" ? 400 : 500;
+    errorMessage = "No se ha podido enviar la encuesta. Inténtalo de nuevo.";
   }
 }
 

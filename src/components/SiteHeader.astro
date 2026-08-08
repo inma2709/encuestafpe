@@ -10,8 +10,7 @@ const { currentPath = Astro.url.pathname } = Astro.props;
 const links = [
   { href: "/estudios/docentes-fpe-2026/participar", label: "Encuesta" },
   { href: "/informes", label: "Informes" },
-  { href: "/metodologia", label: "Metodología" },
-  { href: "/acerca-de", label: "Acerca de" },
+ 
 ];
 
 function isCurrent(href: string) {
@@ -25,7 +24,7 @@ function isCurrent(href: string) {
   <div class="shell-wide flex items-center justify-between gap-4 py-4 sm:py-5">
     <a href="/" class="group block min-w-0 no-underline" aria-label="Observatorio FPE — inicio">
       <span class="font-display text-[1.15rem] leading-none tracking-tight text-[var(--color-brand-dark)] sm:text-xl">
-        Observatorio FPE
+        OBSERVATORIO SITUACIÓN FPE 2026
       </span>
       <span class="mt-1 block truncate text-[0.7rem] tracking-[0.08em] text-[var(--color-ink-muted)] uppercase sm:text-xs">
         Formación Profesional para el Empleo

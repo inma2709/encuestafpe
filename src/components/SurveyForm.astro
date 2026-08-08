@@ -206,6 +206,7 @@ const estMinutes = Math.max(8, Math.round(requiredCount * 0.35));
     <p class="text-sm leading-relaxed text-[var(--color-ink-muted)]">
       Envío anónimo. Al completar podrás ver resultados e informes agregados.
     </p>
+    <p id="submission-status" class="submission-status hidden" role="status" aria-live="polite"></p>
     <button type="submit" class="btn btn-primary btn-full self-center sm:max-w-xs" id="submit-btn">
       <span id="submit-text">Enviar respuestas</span>
       <svg
@@ -240,6 +241,8 @@ const estMinutes = Math.max(8, Math.round(requiredCount * 0.35));
   const started = Date.now();
   const form = document.getElementById("survey-form");
   const estMinutes = Number(form?.getAttribute("data-est-minutes") || "10");
+  let isSubmitting = false;
+  let lastBlockedQuestion = null;
 
   function isQuestionAnswered(fieldset) {
     if (!(fieldset instanceof HTMLElement)) return false;
@@ -266,38 +269,23 @@ const estMinutes = Math.max(8, Math.round(requiredCount * 0.35));
     return false;
   }
 
+  function getFirstUnansweredRequired() {
+    return getVisibleQuestionFieldsets().find((fieldset) => {
+      const required = fieldset.getAttribute("data-required") === "1" ||
+        getQuestionControls(fieldset).some((control) => control.required);
+      return required && !isQuestionAnswered(fieldset);
+    }) ?? null;
+  }
+
   function updateLockState() {
     if (!form) return;
-    const fieldsets = Array.from(form.querySelectorAll("fieldset[data-question-id]")).filter(
-      (fs) => !(fs instanceof HTMLElement && fs.classList.contains("hidden")),
-    );
-    
-    let lastUnansweredRequired = null;
-    
-    for (const fs of fieldsets) {
-      if (!(fs instanceof HTMLElement)) continue;
-      const isRequired = fs.getAttribute("data-required") === "1";
-      const isConditional = fs.getAttribute("data-conditional");
-      
-      // Skip conditional questions in lock logic (they have their own show/hide)
-      if (isConditional) continue;
-      
-      if (isRequired && !isQuestionAnswered(fs)) {
-        lastUnansweredRequired = fs;
-        break;
-      }
-    }
-    
-    // Lock all questions after the first unanswered required one
+    const fieldsets = getVisibleQuestionFieldsets();
+    const firstUnansweredRequired = getFirstUnansweredRequired();
+    if (!firstUnansweredRequired) lastBlockedQuestion = null;
+
     let foundUnanswered = false;
     for (const fs of fieldsets) {
-      if (!(fs instanceof HTMLElement)) continue;
-      const isConditional = fs.getAttribute("data-conditional");
-      
-      // Skip conditional questions
-      if (isConditional) continue;
-      
-      if (fs === lastUnansweredRequired) {
+      if (fs === firstUnansweredRequired) {
         foundUnanswered = true;
         fs.classList.remove("locked");
         fs.setAttribute("aria-disabled", "false");
@@ -371,30 +359,74 @@ const estMinutes = Math.max(8, Math.round(requiredCount * 0.35));
       clearQuestionError(fieldset);
     }
   });
+  form?.addEventListener("click", (event) => {
+    const fieldset = event.target instanceof Element
+      ? event.target.closest("fieldset[data-question-id].locked")
+      : null;
+    if (!(fieldset instanceof HTMLElement)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    explainBlockedQuestion();
+  });
+  form?.addEventListener("focusin", (event) => {
+    const fieldset = event.target instanceof Element
+      ? event.target.closest("fieldset[data-question-id].locked")
+      : null;
+    if (fieldset instanceof HTMLElement) explainBlockedQuestion();
+  });
   updateProgress();
   updateLockState();
 
-  form?.addEventListener("submit", (ev) => {
-    const input = document.getElementById("durationMs");
-    if (input instanceof HTMLInputElement) {
-      input.value = String(Date.now() - started);
-    }
-    if (!validateClient()) {
-      ev.preventDefault();
-      return;
-    }
-    
-    // Show loading state
+  function setSubmissionStatus(message, state) {
+    const status = document.getElementById("submission-status");
+    if (!(status instanceof HTMLElement)) return;
+    status.textContent = message;
+    status.dataset.state = state;
+    status.classList.remove("hidden");
+  }
+
+  function setSubmitting(submitting) {
     const btn = document.getElementById("submit-btn");
     const text = document.getElementById("submit-text");
     const spinner = document.getElementById("submit-spinner");
-    
-    if (btn instanceof HTMLButtonElement) {
-      btn.disabled = true;
-    }
-    if (text) text.textContent = "Enviando...";
-    if (spinner) {
-      spinner.classList.remove("hidden");
+    if (form instanceof HTMLFormElement) form.setAttribute("aria-busy", String(submitting));
+    if (btn instanceof HTMLButtonElement) btn.disabled = submitting;
+    if (text) text.textContent = submitting ? "Enviando..." : "Enviar respuestas";
+    if (spinner) spinner.classList.toggle("hidden", !submitting);
+  }
+
+  form?.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    if (isSubmitting) return;
+
+    const input = document.getElementById("durationMs");
+    if (input instanceof HTMLInputElement) input.value = String(Date.now() - started);
+    if (!validateClient()) return;
+
+    isSubmitting = true;
+    setSubmitting(true);
+
+    try {
+      const response = await fetch("/api/survey", {
+        method: "POST",
+        body: new FormData(form),
+        headers: { Accept: "application/json" },
+      });
+      let payload;
+      try {
+        payload = await response.json();
+      } catch (error) {
+        throw new Error("La API devolvió una respuesta no válida.", { cause: error });
+      }
+      if (!response.ok || payload?.ok !== true) {
+        throw new Error(payload?.error || `La API devolvió HTTP ${response.status}.`);
+      }
+      setSubmissionStatus("Encuesta enviada correctamente. Gracias por participar.", "success");
+    } catch (error) {
+      console.error("Survey submission failed", error);
+      setSubmissionStatus("No se ha podido enviar la encuesta. Inténtalo de nuevo.", "error");
+      isSubmitting = false;
+      setSubmitting(false);
     }
   });
 
@@ -492,49 +524,62 @@ const estMinutes = Math.max(8, Math.round(requiredCount * 0.35));
 
   function getVisibleQuestionFieldsets() {
     return Array.from(form?.querySelectorAll("fieldset[data-question-id]") ?? []).filter(
-      (fieldset): fieldset is HTMLElement =>
+      (fieldset) =>
         fieldset instanceof HTMLElement && !fieldset.classList.contains("hidden"),
     );
   }
 
-  function getQuestionControls(fieldset: HTMLElement) {
+  function getQuestionControls(fieldset) {
     return Array.from(fieldset.querySelectorAll("input, select, textarea")).filter(
-      (control): control is HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement =>
+      (control) =>
         control instanceof HTMLInputElement ||
         control instanceof HTMLSelectElement ||
         control instanceof HTMLTextAreaElement,
     );
   }
 
-  function setQuestionError(fieldset: HTMLElement, message: string) {
+  function setQuestionError(fieldset, message) {
     fieldset.classList.add("has-validation-error");
     const error = fieldset.querySelector("[data-validation-message]");
     if (error) error.textContent = message;
     getQuestionControls(fieldset).forEach((control) => control.setAttribute("aria-invalid", "true"));
   }
 
-  function clearQuestionError(fieldset: HTMLElement) {
+  function clearQuestionError(fieldset) {
     fieldset.classList.remove("has-validation-error");
     const error = fieldset.querySelector("[data-validation-message]");
     if (error) error.textContent = "";
     getQuestionControls(fieldset).forEach((control) => control.removeAttribute("aria-invalid"));
   }
 
-  function focusQuestion(fieldset: HTMLElement) {
+  function focusQuestion(fieldset) {
     fieldset.scrollIntoView({ behavior: "smooth", block: "center" });
     getQuestionControls(fieldset)[0]?.focus({ preventScroll: true });
+  }
+
+  function explainBlockedQuestion() {
+    const pending = getFirstUnansweredRequired();
+    if (!(pending instanceof HTMLElement)) return;
+    if (lastBlockedQuestion !== pending) {
+      setQuestionError(
+        pending,
+        "Para continuar, responde primero la pregunta anterior obligatoria.",
+      );
+      lastBlockedQuestion = pending;
+    }
+    focusQuestion(pending);
   }
 
   function validateClient() {
     const fieldsets = getVisibleQuestionFieldsets();
     fieldsets.forEach(clearQuestionError);
-    let firstInvalid: HTMLElement | null = null;
+    let firstInvalid = null;
 
     for (const fieldset of fieldsets) {
       const required = fieldset.getAttribute("data-required") === "1" ||
         getQuestionControls(fieldset).some((control) => control.required);
       if (required && !isQuestionAnswered(fieldset)) {
-        setQuestionError(fieldset, "Responde esta pregunta para poder continuar.");
+        setQuestionError(fieldset, "Falta responder esta pregunta obligatoria para poder enviar la encuesta.");
         firstInvalid ??= fieldset;
       } else if (getQuestionControls(fieldset).some(
         (control) => !control.disabled && !control.checkValidity(),
