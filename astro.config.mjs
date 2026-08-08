@@ -6,6 +6,16 @@ import { fileURLToPath } from "node:url";
 export default defineConfig({
   output: "server",
   adapter: vercel(),
+  security: {
+    // Trust only Vercel's forwarded production host while keeping Astro's CSRF check enabled.
+    checkOrigin: true,
+    allowedDomains: [
+      {
+        protocol: "https",
+        hostname: "encuestafpe.vercel.app",
+      },
+    ],
+  },
   vite: {
     plugins: [tailwindcss()],
     resolve: {
