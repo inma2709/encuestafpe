@@ -1,7 +1,7 @@
 import type { MetricDefinition, MetricId } from "./analyticsTypes";
 
 const teachingDimensions = ["respondent_type", "demo_ccaa", "demo_family", "teaching_mode", "job_relation", "demo_experience"] as const;
-const aspiringDimensions = ["respondent_type", "aspiring_family", "aspiring_teaching_qualification", "aspiring_sector_experience", "aspiring_job_search"] as const;
+const aspiringDimensions = ["respondent_type", "demo_family", "aspiring_teaching_qualification", "demo_sector_experience", "aspiring_job_search"] as const;
 
 export const ANALYTICS_METRICS: Record<MetricId, MetricDefinition> = {
   profile_composition: { id: "profile_composition", questionCode: "respondent_type", population: "ALL_RESPONDENTS", aggregation: "single", allowedDimensions: [], priority: "essential" },
@@ -31,13 +31,13 @@ export const ANALYTICS_METRICS: Record<MetricId, MetricDefinition> = {
   professional_recognition: { id: "professional_recognition", questionCode: "sector_recognition", population: "CURRENT_TEACHERS", aggregation: "likert", allowedDimensions: ["teaching_mode", "demo_experience"], favorableOptionCodes: ["likert_4", "likert_5"], neutralOptionCodes: ["likert_3"], unfavorableOptionCodes: ["likert_1", "likert_2"], priority: "very_relevant" },
   sector_problems_ranking: { id: "sector_problems_ranking", questionCode: "sector_problems", population: "TEACHING_EXPERIENCE", aggregation: "multi", allowedDimensions: teachingDimensions, comparableByRespondentType: true, priority: "essential" },
   future_expectation_distribution: { id: "future_expectation_distribution", questionCode: "future_3y", population: "TEACHING_EXPERIENCE", aggregation: "single", allowedDimensions: ["respondent_type", "job_relation", "teaching_mode", "demo_experience"], comparableByRespondentType: true, priority: "essential" },
-  aspiring_family_interest: { id: "aspiring_family_interest", questionCode: "aspiring_family", population: "ASPIRING_TEACHERS", aggregation: "single", allowedDimensions: [], priority: "very_relevant" },
+  aspiring_family_interest: { id: "aspiring_family_interest", questionCode: "demo_family", population: "ASPIRING_TEACHERS", aggregation: "single", allowedDimensions: [], priority: "very_relevant" },
   aspiring_requirements_knowledge: { id: "aspiring_requirements_knowledge", questionCode: "aspiring_requirements_knowledge", population: "ASPIRING_TEACHERS", aggregation: "single", allowedDimensions: aspiringDimensions, priority: "essential" },
   aspiring_teaching_qualification: { id: "aspiring_teaching_qualification", questionCode: "aspiring_teaching_qualification", population: "ASPIRING_TEACHERS", aggregation: "single", allowedDimensions: aspiringDimensions, priority: "essential" },
-  aspiring_sector_experience: { id: "aspiring_sector_experience", questionCode: "aspiring_sector_experience", population: "ASPIRING_TEACHERS", aggregation: "single", allowedDimensions: aspiringDimensions, priority: "very_relevant" },
+  aspiring_sector_experience: { id: "aspiring_sector_experience", questionCode: "demo_sector_experience", population: "ASPIRING_TEACHERS", aggregation: "single", allowedDimensions: aspiringDimensions, priority: "very_relevant" },
   aspiring_job_search: { id: "aspiring_job_search", questionCode: "aspiring_job_search", population: "ASPIRING_TEACHERS", aggregation: "single", allowedDimensions: aspiringDimensions, priority: "very_relevant" },
   aspiring_access_barriers: { id: "aspiring_access_barriers", questionCode: "aspiring_main_difficulty", population: "ASPIRING_TEACHERS", aggregation: "single", allowedDimensions: aspiringDimensions, priority: "essential" },
-  aspiring_preferred_mode: { id: "aspiring_preferred_mode", questionCode: "aspiring_work_mode", population: "ASPIRING_TEACHERS", aggregation: "single", allowedDimensions: ["aspiring_family"], priority: "exploratory" },
+  aspiring_preferred_mode: { id: "aspiring_preferred_mode", questionCode: "aspiring_work_mode", population: "ASPIRING_TEACHERS", aggregation: "single", allowedDimensions: ["demo_family"], priority: "exploratory" },
   aspiring_economic_perception: { id: "aspiring_economic_perception", questionCode: "aspiring_economic_conditions", population: "ASPIRING_TEACHERS", aggregation: "likert", allowedDimensions: aspiringDimensions, favorableOptionCodes: ["likert_4", "likert_5"], neutralOptionCodes: ["likert_3"], unfavorableOptionCodes: ["likert_1", "likert_2"], priority: "very_relevant" },
-  aspiring_hourly_rate_distribution: { id: "aspiring_hourly_rate_distribution", questionCode: "aspiring_hourly_rate", population: "ASPIRING_TEACHERS", aggregation: "number", allowedDimensions: ["aspiring_family"], priority: "very_relevant" },
+  aspiring_hourly_rate_distribution: { id: "aspiring_hourly_rate_distribution", questionCode: "adequate_hourly_rate", population: "ASPIRING_TEACHERS", aggregation: "number", allowedDimensions: ["demo_family"], priority: "very_relevant" },
 };

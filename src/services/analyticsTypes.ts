@@ -21,9 +21,7 @@ export const DIMENSION_IDS = [
   "job_income_share",
   "demo_sector_experience",
   "demo_education",
-  "aspiring_family",
   "aspiring_teaching_qualification",
-  "aspiring_sector_experience",
   "aspiring_job_search",
 ] as const;
 export type DimensionId = (typeof DIMENSION_IDS)[number];
@@ -115,9 +113,7 @@ export interface AnalyticsFilters {
   job_income_share?: string;
   demo_sector_experience?: string;
   demo_education?: string;
-  aspiring_family?: string;
   aspiring_teaching_qualification?: string;
-  aspiring_sector_experience?: string;
   aspiring_job_search?: string;
 }
 
