@@ -1,0 +1,84 @@
+---
+import Icon from "@/components/Icon.astro";
+
+interface Props {
+  currentPath?: string;
+}
+
+const { currentPath = Astro.url.pathname } = Astro.props;
+
+const links = [
+  { href: "/estudios/docentes-fpe-2026/participar", label: "Encuesta" },
+  { href: "/informes", label: "Informes" },
+  { href: "/metodologia", label: "Metodología" },
+  { href: "/acerca-de", label: "Acerca de" },
+];
+
+function isCurrent(href: string) {
+  if (href === "/informes") return currentPath.startsWith("/informes") || currentPath.includes("/informes");
+  if (href.includes("/participar")) return currentPath.includes("/participar");
+  return currentPath.startsWith(href);
+}
+---
+
+<header class="site-header">
+  <div class="shell-wide flex items-center justify-between gap-4 py-4 sm:py-5">
+    <a href="/" class="group block min-w-0 no-underline" aria-label="Observatorio FPE — inicio">
+      <span class="font-display text-[1.15rem] leading-none tracking-tight text-[var(--color-brand-dark)] sm:text-xl">
+        Observatorio FPE
+      </span>
+      <span class="mt-1 block truncate text-[0.7rem] tracking-[0.08em] text-[var(--color-ink-muted)] uppercase sm:text-xs">
+        Formación Profesional para el Empleo
+      </span>
+    </a>
+
+    <nav class="hidden items-center gap-6 md:flex" aria-label="Principal">
+      {links.map((l) => (
+        <a
+          href={l.href}
+          class="nav-link"
+          aria-current={isCurrent(l.href) ? "page" : undefined}
+        >
+          {l.label}
+        </a>
+      ))}
+      <a href="/privacidad" class="nav-link">Privacidad</a>
+    </nav>
+
+    <details class="relative md:hidden">
+      <summary
+        class="btn btn-ghost list-none px-3 [&::-webkit-details-marker]:hidden"
+        aria-label="Abrir menú"
+      >
+        <Icon name="menu" size={18} />
+        <span>Menú</span>
+      </summary>
+      <div
+        class="absolute right-0 mt-2 w-52 overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] p-2 shadow-[var(--shadow-lift)]"
+      >
+        {[...links, { href: "/privacidad", label: "Privacidad" }].map((l) => (
+          <a
+            href={l.href}
+            class="flex min-h-[var(--touch)] items-center rounded-[var(--radius-sm)] px-3 text-sm text-[var(--color-ink)] no-underline hover:bg-[var(--color-paper-deep)]"
+            aria-current={isCurrent(l.href) ? "page" : undefined}
+          >
+            {l.label}
+          </a>
+        ))}
+      </div>
+    </details>
+  </div>
+</header>
+
+<script>
+  // Close mobile menu when clicking a link
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'A' && target.closest('details')) {
+      const details = target.closest('details');
+      if (details) {
+        details.removeAttribute('open');
+      }
+    }
+  });
+</script>

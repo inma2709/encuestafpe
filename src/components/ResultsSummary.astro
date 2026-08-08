@@ -1,0 +1,59 @@
+---
+import type { ResultsView } from "@/types";
+
+interface Props {
+  results: ResultsView;
+}
+
+const { results } = Astro.props;
+---
+
+<div class="space-y-12">
+  <div class="chapter fade-up">
+    <p class="eyebrow">Oleada {results.waveLabel}</p>
+    <p class="mt-4 font-display text-5xl tabular-nums tracking-tight text-[var(--color-brand-dark)]">
+      {results.totalSessions}
+    </p>
+    <p class="mt-2 text-[var(--color-ink-muted)]">respuestas analizadas</p>
+    <p class="mt-4 text-sm text-[var(--color-ink-muted)]">
+      Celdas con menos de {results.minN} respuestas ocultas. Porcentajes con n absoluto.
+    </p>
+  </div>
+
+  {
+    results.questions.map((q) => (
+      <section class="chapter">
+        <h2 class="font-display text-xl text-[var(--color-brand-dark)] sm:text-2xl">{q.label}</h2>
+        <p class="mt-2 text-xs tracking-wide text-[var(--color-ink-muted)] uppercase">
+          Base · {q.validSessions} respuestas válidas
+        </p>
+
+        {q.suppressed ? (
+          <p class="mt-5 text-sm text-[var(--color-ink-muted)]">
+            Aún no hay suficientes respuestas (n &lt; {results.minN}).
+          </p>
+        ) : q.type === "text" ? (
+          <p class="mt-5 text-sm text-[var(--color-ink-muted)]">
+            {q.textResponseCount} respuestas de texto (no se muestran valores individuales).
+          </p>
+        ) : (
+          <ul class="mt-6 space-y-4">
+            {q.buckets.map((b) => (
+              <li>
+                <div class="mb-2 flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+                  <span class="text-[0.975rem] text-[var(--color-ink)]">{b.label}</span>
+                  <span class="shrink-0 text-sm tabular-nums text-[var(--color-ink-muted)]">
+                    {b.display}
+                  </span>
+                </div>
+                <div class="stat-bar">
+                  <span style={`width: ${Math.min(b.percentage, 100)}%`} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    ))
+  }
+</div>

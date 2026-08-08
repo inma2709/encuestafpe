@@ -1,0 +1,40 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import ReportsDashboard from "@/components/ReportsDashboard.astro";
+import { DomainError } from "@/types";
+import { getReports, parseReportFilters } from "@/services";
+
+const slug = "docentes-fpe-2026";
+const filters = parseReportFilters(Astro.url.searchParams);
+const compare = Astro.url.searchParams.get("comparar") || "";
+
+let view;
+let errorMessage: string | undefined;
+
+try {
+  view = await getReports(slug, filters, compare);
+} catch (err) {
+  errorMessage =
+    err instanceof DomainError
+      ? err.message
+      : err instanceof Error
+        ? err.message
+        : "Error al cargar informes";
+}
+---
+
+<BaseLayout title="Informes" width="default">
+  {
+    errorMessage ? (
+      <section class="fade-up space-y-6">
+        <h1 class="font-display text-3xl sm:text-4xl lg:text-5xl">Informes</h1>
+        <p class="text-[var(--color-ink-muted)]">{errorMessage}</p>
+        <a href={`/estudios/${slug}/participar`} class="btn btn-primary btn-full sm:w-auto">
+          Ir a la encuesta
+        </a>
+      </section>
+    ) : view ? (
+      <ReportsDashboard view={view} filterAction="/informes" compare={compare} />
+    ) : null
+  }
+</BaseLayout>

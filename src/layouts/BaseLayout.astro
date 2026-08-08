@@ -1,0 +1,52 @@
+---
+import "@/styles/global.css";
+import { ViewTransitions } from "astro:transitions";
+import SiteHeader from "@/components/SiteHeader.astro";
+import SiteFooter from "@/components/SiteFooter.astro";
+import { SITE_NAME } from "@/lib/config";
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** narrow = encuesta; wide = home/informes; default = lectura */
+  width?: "narrow" | "default" | "wide";
+  bare?: boolean;
+}
+
+const {
+  title = SITE_NAME,
+  description = "Estudio independiente y anónimo sobre la situación de los docentes de Formación Profesional para el Empleo en España.",
+  width = "default",
+  bare = false,
+} = Astro.props;
+
+const fullTitle = title === SITE_NAME ? title : `${title} · Observatorio FPE`;
+const shellClass =
+  width === "wide" ? "shell-wide" : width === "narrow" ? "shell" : "shell";
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#f6f3ec" />
+    <title>{fullTitle}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,450;9..144,560;9..144,650&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <ViewTransitions />
+  </head>
+  <body class="flex min-h-screen flex-col">
+    {!bare && <SiteHeader currentPath={Astro.url.pathname} />}
+    <main class:list={[shellClass, "w-full flex-1 py-10 sm:py-14 lg:py-16 xl:py-20", width === "wide" && "py-0 sm:py-0"]}>
+      <slot />
+    </main>
+    {!bare && <SiteFooter />}
+  </body>
+</html>

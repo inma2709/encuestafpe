@@ -1,0 +1,59 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { SITE_NAME } from "@/lib/config";
+---
+
+<BaseLayout title="Privacidad">
+  <article class="fade-up space-y-10 text-[var(--color-ink-muted)] lg:space-y-12">
+    <div class="space-y-4">
+      <p class="eyebrow">Datos</p>
+      <h1 class="font-display text-3xl sm:text-4xl lg:text-5xl text-balance">Privacidad y anonimato</h1>
+    </div>
+
+    <p class="lede">
+      El {SITE_NAME} recoge respuestas de forma <strong class="text-[var(--color-ink)]">anónima</strong>.
+      No hay registro de usuarios ni inicio de sesión.
+    </p>
+
+    <section class="space-y-3 lg:space-y-4">
+      <h2 class="font-display text-2xl text-[var(--color-brand-dark)]">Qué no recogemos</h2>
+      <ul class="list-disc space-y-2 pl-5">
+        <li>Nombre y apellidos</li>
+        <li>Correo electrónico</li>
+        <li>Teléfono o documento de identidad</li>
+        <li>Cuenta de usuario</li>
+      </ul>
+    </section>
+
+    <section class="space-y-3 lg:space-y-4">
+      <h2 class="font-display text-2xl text-[var(--color-brand-dark)]">Qué sí recogemos</h2>
+      <ul class="list-disc space-y-2 pl-5">
+        <li>Respuestas al cuestionario</li>
+        <li>
+          Datos demográficos y profesionales agregables: género, edad, CCAA, provincia, familia
+          profesional y condiciones laborales
+        </li>
+        <li>
+          Un token técnico de desbloqueo (hash) para mostrar resultados tras completar, sin
+          identificarte
+        </li>
+      </ul>
+    </section>
+
+    <section class="space-y-3 lg:space-y-4">
+      <h2 class="font-display text-2xl text-[var(--color-brand-dark)]">Publicación</h2>
+      <p class="leading-relaxed">
+        Solo se publican estadísticas agregadas. Las combinaciones con pocas respuestas se ocultan
+        (umbral mínimo) para reducir riesgos de reidentificación.
+      </p>
+    </section>
+
+    <section class="space-y-3 lg:space-y-4">
+      <h2 class="font-display text-2xl text-[var(--color-brand-dark)]">Contacto</h2>
+      <p class="leading-relaxed">
+        Para ejercer derechos o consultas sobre el tratamiento de datos de este observatorio,
+        contacta con el responsable del proyecto a través del canal que se publique en esta web.
+      </p>
+    </section>
+  </article>
+</BaseLayout>

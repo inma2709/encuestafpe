@@ -1,0 +1,6 @@
+# A minimal config so `supabase db reset` can apply migrations + seed.
+# Full config can be generated with `supabase init` if you use the local stack.
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]

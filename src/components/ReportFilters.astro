@@ -1,0 +1,199 @@
+---
+import type { ReportsView } from "@/types";
+
+interface Props {
+  view: ReportsView;
+  action: string;
+  compare?: string;
+}
+
+const { view, action, compare = "" } = Astro.props;
+const f = view.filters;
+const o = view.filterOptions;
+
+function hrefWith(params: Record<string, string>) {
+  const u = new URLSearchParams();
+  if (f.ccaaCode) u.set("ccaa", f.ccaaCode);
+  if (f.familyCode) u.set("familia", f.familyCode);
+  if (f.modeCode) u.set("modalidad", f.modeCode);
+  if (f.relationCode) u.set("relacion", f.relationCode);
+  for (const [k, v] of Object.entries(params)) {
+    if (v) u.set(k, v);
+    else u.delete(k);
+  }
+  const q = u.toString();
+  return q ? `${action}?${q}` : action;
+}
+---
+
+<form method="get" action={action} class="chapter space-y-8">
+  <div class="space-y-4">
+    <div class="flex items-start gap-3">
+      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent)]/15">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+        </svg>
+      </div>
+      <div>
+        <p class="font-display text-2xl text-[var(--color-brand-dark)]">Filtra los datos</p>
+        <p class="mt-2 text-base text-[var(--color-ink-muted)] leading-relaxed">
+          Elige uno o varios filtros para ver datos de un grupo específico de docentes. Por ejemplo: "solo docentes de Madrid" o "autónomos que trabajan en teleformación".
+        </p>
+      </div>
+    </div>
+    
+    {/* Info box explicativa */}
+    <div class="rounded-lg bg-[var(--color-accent)]/5 border border-[var(--color-accent)]/20 p-4">
+      <div class="flex items-start gap-3">
+        <svg class="mt-0.5 shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        <div class="text-sm text-[var(--color-ink-muted)] space-y-2">
+          <p><strong class="text-[var(--color-ink)]">¿Cómo funcionan?</strong> Los filtros se combinan (todos a la vez). Si eliges "Madrid + Teleformación", verás solo respuestas de docentes de Madrid que trabajen en teleformación.</p>
+          <p><strong class="text-[var(--color-ink)]">Privacidad:</strong> Si quedan menos de {view.minN} respuestas con tus filtros, ocultaremos los datos para proteger el anonimato.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    <label class="block text-xs font-semibold tracking-wide text-[var(--color-ink-muted)] uppercase">
+      Comunidad Autónoma
+      <select name="ccaa" class="field mt-2 text-sm normal-case tracking-normal font-normal">
+        <option value="">España (todas)</option>
+        {o.ccaa.map((x) => (
+          <option value={x.code} selected={f.ccaaCode === x.code}>
+            {x.label}
+          </option>
+        ))}
+      </select>
+    </label>
+    <label class="block text-xs font-semibold tracking-wide text-[var(--color-ink-muted)] uppercase">
+      Familia profesional
+      <select name="familia" class="field mt-2 text-sm normal-case tracking-normal font-normal">
+        <option value="">Todas</option>
+        {o.families.map((x) => (
+          <option value={x.code} selected={f.familyCode === x.code}>
+            {x.label}
+          </option>
+        ))}
+      </select>
+    </label>
+    <label class="block text-xs font-semibold tracking-wide text-[var(--color-ink-muted)] uppercase">
+      Modalidad
+      <select name="modalidad" class="field mt-2 text-sm normal-case tracking-normal font-normal">
+        <option value="">Todas</option>
+        {o.modes.map((x) => (
+          <option value={x.code} selected={f.modeCode === x.code}>
+            {x.label}
+          </option>
+        ))}
+      </select>
+    </label>
+    <label class="block text-xs font-semibold tracking-wide text-[var(--color-ink-muted)] uppercase">
+      Relación laboral
+      <select name="relacion" class="field mt-2 text-sm normal-case tracking-normal font-normal">
+        <option value="">Todas</option>
+        {o.relations.map((x) => (
+          <option value={x.code} selected={f.relationCode === x.code}>
+            {x.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  </div>
+  {compare && <input type="hidden" name="comparar" value={compare} />}
+  <div class="flex flex-col gap-3 sm:flex-row">
+    <button type="submit" class="btn btn-primary btn-full sm:w-auto">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      Aplicar filtros
+    </button>
+    <a href={action} class="btn btn-ghost btn-full sm:w-auto">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+      Limpiar todo
+    </a>
+  </div>
+
+  <div class="border-t border-[var(--color-line)] pt-8 space-y-4">
+    <div class="flex items-start gap-3">
+      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent)]/15">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/>
+        </svg>
+      </div>
+      <div>
+        <p class="font-display text-xl text-[var(--color-brand-dark)]">Compara grupos</p>
+        <p class="mt-2 text-base text-[var(--color-ink-muted)] leading-relaxed">
+          Puedes comparar dos perfiles para ver diferencias. Por ejemplo: ¿los autónomos ganan más que los trabajadores por cuenta ajena? ¿La teleformación es más estable que la presencial?
+        </p>
+      </div>
+    </div>
+    
+    <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+      <a
+        href={hrefWith({ comparar: "" })}
+        class:list={[
+          "inline-flex items-center gap-2 rounded-lg border-2 px-4 py-2.5 text-sm font-medium transition-all",
+          !compare 
+            ? "border-[var(--color-brand)] bg-[var(--color-brand)] text-white shadow-md" 
+            : "border-[var(--color-line)] bg-[var(--color-surface)] text-[var(--color-ink)] hover:border-[var(--color-brand-soft)]"
+        ]}
+      >
+        {!compare ? (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+          </svg>
+        )}
+        Sin comparativa
+      </a>
+      <a
+        href={hrefWith({ comparar: "relacion" })}
+        class:list={[
+          "inline-flex items-center gap-2 rounded-lg border-2 px-4 py-2.5 text-sm font-medium transition-all",
+          compare === "relacion"
+            ? "border-[var(--color-brand)] bg-[var(--color-brand)] text-white shadow-md"
+            : "border-[var(--color-line)] bg-[var(--color-surface)] text-[var(--color-ink)] hover:border-[var(--color-brand-soft)]"
+        ]}
+      >
+        {compare === "relacion" ? (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+          </svg>
+        )}
+        Autónomos vs cuenta ajena
+      </a>
+      <a
+        href={hrefWith({ comparar: "modalidad" })}
+        class:list={[
+          "inline-flex items-center gap-2 rounded-lg border-2 px-4 py-2.5 text-sm font-medium transition-all",
+          compare === "modalidad"
+            ? "border-[var(--color-brand)] bg-[var(--color-brand)] text-white shadow-md"
+            : "border-[var(--color-line)] bg-[var(--color-surface)] text-[var(--color-ink)] hover:border-[var(--color-brand-soft)]"
+        ]}
+      >
+        {compare === "modalidad" ? (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+          </svg>
+        )}
+        Teleformación vs presencial
+      </a>
+    </div>
+  </div>
+</form>

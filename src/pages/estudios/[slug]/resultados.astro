@@ -1,0 +1,72 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import Icon from "@/components/Icon.astro";
+import ResultsSummary from "@/components/ResultsSummary.astro";
+import { getUnlockCookie } from "@/lib/cookies";
+import { DomainError } from "@/types";
+import { assertUnlockToken, getResults } from "@/services";
+
+const { slug } = Astro.params;
+if (!slug) {
+  return Astro.redirect("/");
+}
+
+const token = getUnlockCookie(Astro.cookies, slug);
+let locked = false;
+let results;
+let errorMessage: string | undefined;
+
+try {
+  await assertUnlockToken(slug, token);
+  results = await getResults(slug);
+} catch (err) {
+  if (err instanceof DomainError && err.code === "FORBIDDEN") {
+    locked = true;
+  } else if (err instanceof DomainError && err.code === "NOT_FOUND") {
+    return new Response(null, { status: 404, statusText: "Not Found" });
+  } else {
+    errorMessage = err instanceof Error ? err.message : "Error al cargar resultados";
+  }
+}
+---
+
+<BaseLayout title={results ? `Resultados · ${results.studyTitle}` : "Resultados"} width="narrow">
+  {
+    locked ? (
+      <section class="fade-up space-y-8">
+        <p class="eyebrow">Acceso restringido</p>
+        <h1 class="font-display text-3xl sm:text-4xl lg:text-5xl text-balance">Resultados</h1>
+        <p class="lede">
+          Para ver los datos completos, rellena antes la encuesta. <strong>Todos participamos, todos sumamos.</strong>
+        </p>
+        <p class="text-[var(--color-ink-muted)]">
+          Tu participación es totalmente anónima y desbloquea el acceso a resultados e informes automáticos.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a href={`/estudios/${slug}/participar`} class="btn btn-primary btn-full sm:w-auto">
+            Completar la encuesta
+            <Icon name="arrow-right" size={18} />
+          </a>
+          <a href="/informes" class="btn btn-ghost btn-full sm:w-auto">
+            Ver hub público
+          </a>
+        </div>
+      </section>
+    ) : errorMessage ? (
+      <p class="text-[var(--color-danger)]">{errorMessage}</p>
+    ) : results ? (
+      <section class="space-y-10">
+        <header class="fade-up space-y-4">
+          <p class="badge badge-accent">Gracias por participar</p>
+          <h1 class="font-display text-2xl sm:text-4xl lg:text-5xl text-balance">Resultados agregados</h1>
+          <p class="text-[var(--color-ink-muted)]">{results.studyTitle}</p>
+          <a href={`/estudios/${slug}/informes`} class="btn btn-ghost btn-full sm:w-auto">
+            <Icon name="chart-bar" size={18} />
+            Ver informes automáticos
+          </a>
+        </header>
+        <ResultsSummary results={results} />
+      </section>
+    ) : null
+  }
+</BaseLayout>

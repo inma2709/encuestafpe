@@ -1,0 +1,130 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import Icon from "@/components/Icon.astro";
+import { getSupabaseAnon } from "@/lib/supabase";
+
+const supabase = getSupabaseAnon();
+
+// Contar participantes únicos (sesiones de respuesta completadas)
+let participantCount = 247; // fallback por defecto
+
+try {
+  const { count, error } = await supabase
+    .from("response_sessions")
+    .select("*", { count: "exact", head: true })
+    .eq("survey_version_id", "b1000000-0000-4000-8000-000000000012"); // v9
+
+  if (!error && count !== null) {
+    participantCount = count;
+  }
+} catch (error) {
+  console.error("Error al obtener contador de participantes:", error);
+  // Usar el fallback, la página sigue renderizando correctamente
+}
+
+// Caché HTTP: actualiza cada 5 minutos
+if (Astro.response.headers) {
+  Astro.response.headers.set("Cache-Control", "public, max-age=300, s-maxage=300");
+}
+---
+
+<BaseLayout width="wide">
+  <section class="relative isolate min-h-[min(92vh,52rem)] overflow-hidden">
+    <div
+      class="pointer-events-none absolute inset-0 -z-10"
+      aria-hidden="true"
+      style="
+        background:
+          radial-gradient(ellipse 80% 60% at 70% 20%, rgb(111 130 96 / 0.15), transparent 55%),
+          radial-gradient(ellipse 55% 45% at 15% 80%, rgb(74 92 60 / 0.22), transparent 50%),
+          linear-gradient(165deg, #f8f5ee 0%, #efe8db 48%, #e4ddd0 100%);
+      "
+    >
+    </div>
+    <div
+      class="pointer-events-none absolute inset-0 -z-10 opacity-[0.35]"
+      aria-hidden="true"
+      style="
+        background-image: url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%234a5c3c' fill-opacity='0.06'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\");
+      "
+    >
+    </div>
+
+    <div class="shell-wide flex min-h-[min(92vh,52rem)] flex-col justify-end pb-16 pt-20 sm:justify-center sm:pb-24 sm:pt-28">
+      <div class="fade-up max-w-3xl space-y-8">
+        <div class="flex items-center gap-3">
+          <span class="badge badge-accent">Encuesta FPE Agosto 2026</span>
+          <span class="flex items-center gap-1.5 text-xs text-[var(--color-ink-muted)]">
+            <span class="h-1.5 w-1.5 rounded-full bg-[var(--color-brand-soft)] animate-pulse"></span>
+            En curso
+          </span>
+        </div>
+        <p class="font-display text-3xl leading-[1.05] tracking-tight text-[var(--color-brand-dark)] sm:text-5xl md:text-6xl lg:text-7xl text-balance">
+          Observatorio FPE
+        </p>
+        <h1 class="max-w-2xl text-lg font-medium leading-snug text-[var(--color-ink)] sm:text-xl md:text-2xl lg:text-[1.65rem] text-balance" style="font-family: var(--font-sans)">
+        ¿Cómo es realmente trabajar como docente de FPE?
+                 </h1>
+            <p class="text-lg sm:text-xl text-[var(--color-ink)] font-medium">
+              Este estudio recopila datos anónimos de docentes de Formación Profesional para el Empleo para conocer su realidad profesional, detectar tendencias y hacerlas visibles.
+            </p>
+        <p class="lede text-sm sm:text-base lg:text-lg">
+       
+
+Participa en una encuesta anónima de pocos minutos y contribuye a construir, con datos del propio colectivo, una visión más clara de las condiciones profesionales de quienes impartimos Formación Profesional para el Empleo.
+
+Tu respuesta suma. 
+
+        </p>
+        <div class="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center">
+          <a href="/estudios/docentes-fpe-2026/participar" class="btn btn-primary btn-full sm:w-auto">
+            Participar en la encuesta
+            <Icon name="arrow-right" size={18} />
+          </a>
+          <a href="/informes" class="btn btn-ghost btn-full sm:w-auto">
+            <Icon name="chart-bar" size={18} />
+            Ver informes
+          </a>
+        </div>
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-3 pt-4 text-sm text-[var(--color-ink-muted)]">
+          <div class="flex items-center gap-2">
+            <Icon name="shield-check" size={16} />
+            <span>100% anónimo</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <Icon name="users" size={16} />
+            <span>Sin registro</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <Icon name="file-text" size={16} />
+            <span>Metodología abierta</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="shell-wide py-12 sm:py-16">
+    <div class="grid gap-6 sm:grid-cols-3">
+      <div class="rounded-[var(--radius-lg)] border border-[var(--color-line)] bg-[var(--color-surface)] px-6 py-6 text-center shadow-[var(--shadow-soft)] fade-up" style="animation-delay: 100ms;">
+        <p class="font-display text-4xl tabular-nums tracking-tight text-[var(--color-brand-dark)]">{participantCount}</p>
+        <p class="mt-2 text-sm text-[var(--color-ink-muted)]">Docentes participantes</p>
+      </div>
+      <div class="rounded-[var(--radius-lg)] border border-[var(--color-line)] bg-[var(--color-surface)] px-6 py-6 text-center shadow-[var(--shadow-soft)] fade-up" style="animation-delay: 150ms;">
+        <p class="font-display text-4xl tabular-nums tracking-tight text-[var(--color-brand-dark)]">17</p>
+        <p class="mt-2 text-sm text-[var(--color-ink-muted)]">Comunidades autónomas</p>
+      </div>
+      <div class="rounded-[var(--radius-lg)] border border-[var(--color-line)] bg-[var(--color-surface)] px-6 py-6 text-center shadow-[var(--shadow-soft)] fade-up" style="animation-delay: 200ms;">
+        <p class="font-display text-4xl tabular-nums tracking-tight text-[var(--color-brand-dark)]">26</p>
+        <p class="mt-2 text-sm text-[var(--color-ink-muted)]">Familias profesionales</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="flex justify-center pt-2">
+    <a href="/estudios/docentes-fpe-2026/participar" class="btn btn-primary">
+      Participar en la encuesta
+      <Icon name="arrow-right" size={18} />
+    </a>
+  </div>
+</BaseLayout>

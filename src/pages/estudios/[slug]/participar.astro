@@ -1,0 +1,105 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import SurveyForm from "@/components/SurveyForm.astro";
+import { setUnlockCookie } from "@/lib/cookies";
+import { DomainError, type AnswerInput } from "@/types";
+import { getActiveSurvey, submitSurvey } from "@/services";
+
+const { slug } = Astro.params;
+if (!slug) {
+  return Astro.redirect("/");
+}
+
+let errorMessage: string | undefined;
+
+if (Astro.request.method === "POST") {
+  try {
+    const form = await Astro.request.formData();
+    const studySlug = String(form.get("studySlug") ?? slug);
+    const website = String(form.get("website") ?? "");
+    const durationRaw = String(form.get("durationMs") ?? "0");
+    const durationMs = Number.parseInt(durationRaw, 10);
+
+    const active = await getActiveSurvey(studySlug);
+    const answers: AnswerInput[] = [];
+
+    for (const question of active.questions) {
+      const key = `q_${question.id}`;
+
+      if (question.type === "multi") {
+        const values = form.getAll(key).map(String).filter(Boolean);
+        if (values.length > 0 || question.required) {
+          answers.push({ questionId: question.id, optionIds: values });
+        }
+        continue;
+      }
+
+      const value = form.get(key);
+      if (value == null || String(value).trim() === "") {
+        continue;
+      }
+
+      if (question.type === "text") {
+        answers.push({ questionId: question.id, valueText: String(value) });
+      } else if (question.type === "number") {
+        answers.push({
+          questionId: question.id,
+          valueNumber: Number(value),
+        });
+      } else {
+        answers.push({ questionId: question.id, optionId: String(value) });
+      }
+    }
+
+    const result = await submitSurvey({
+      studySlug,
+      answers,
+      website,
+      durationMs: Number.isFinite(durationMs) ? durationMs : undefined,
+    });
+
+    setUnlockCookie(Astro.cookies, result.studySlug, result.unlockToken);
+    return Astro.redirect(`/estudios/${result.studySlug}/resultados`);
+  } catch (err) {
+    errorMessage =
+      err instanceof DomainError
+        ? err.message
+        : "No se pudo enviar la encuesta. Inténtalo de nuevo.";
+  }
+}
+
+let survey;
+try {
+  survey = await getActiveSurvey(slug);
+} catch (err) {
+  if (err instanceof DomainError && (err.code === "NOT_FOUND" || err.code === "CLOSED")) {
+    return Astro.redirect(`/estudios/${slug}`);
+  }
+  throw err;
+}
+
+if (survey.study.status !== "open") {
+  return Astro.redirect(`/estudios/${slug}`);
+}
+---
+
+<BaseLayout title={`Participar · ${survey.study.title}`} width="narrow">
+  <div class="mb-8 space-y-4 fade-up sm:mb-10">
+    <p class="text-sm text-[var(--color-ink-muted)]">
+      <a href={`/estudios/${survey.study.slug}`} class="nav-link inline-flex items-center gap-1">
+        <span class="inline-block" style="transform: translateY(1px);">←</span>
+        <span>Volver al estudio</span>
+      </a>
+    </p>
+    <h1 class="font-display text-2xl sm:text-3xl lg:text-4xl text-balance">Encuesta sobre el sector de la FPE</h1>
+    <p class="lede text-sm sm:text-base">
+      Los campos con * son obligatorios. Solo el comentario final es opcional. 
+    </p>
+  </div>
+
+  <SurveyForm
+    questions={survey.questions}
+    studySlug={survey.study.slug}
+    errorMessage={errorMessage}
+  />
+</BaseLayout>

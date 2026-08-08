@@ -1,0 +1,105 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import Icon from "@/components/Icon.astro";
+import { SITE_NAME } from "@/lib/config";
+---
+
+<BaseLayout title="Sobre el proyecto">
+  <article class="fade-up space-y-12 text-[var(--color-ink-muted)] lg:space-y-14">
+    <div class="space-y-4">
+      <p class="eyebrow">Sobre el proyecto</p>
+      <h1 class="font-display text-3xl sm:text-4xl lg:text-5xl text-balance">Qué es el Observatorio FPE</h1>
+      <p class="w-full text-center text-lg">
+        Una encuesta anónima sobre la realidad laboral de los docentes de Formación Profesional para el Empleo. Los informes son públicos. No hay registro ni datos personales.
+      </p>
+    </div>
+
+    <section class="space-y-4 lg:space-y-5">
+      <h2 class="font-display text-2xl text-[var(--color-brand-dark)]">Por qué existe</h2>
+      
+      <p class="leading-relaxed">
+        Sabemos poco sobre las condiciones laborales de quienes imparten FPE. Este proyecto recopila esa información directamente de los docentes para generar informes públicos basados en datos reales.
+      </p>
+
+      <p class="leading-relaxed">
+        <strong class="text-[var(--color-ink)]">Los informes permiten:</strong>
+      </p>
+
+      <ul class="list-disc space-y-2 pl-5 leading-relaxed">
+        <li>Conocer la estructura del empleo docente en FPE (estabilidad, modalidades, condiciones)</li>
+        <li>Comparar por comunidad, provincia, familia profesional y modalidad</li>
+        <li>Ofrecer datos útiles para docentes, centros, administraciones y medios</li>
+        <li>Servir como base para estudios más especializados</li>
+      </ul>
+    </section>
+
+    <section class="space-y-4 lg:space-y-5">
+      <h2 class="font-display text-2xl text-[var(--color-brand-dark)]">Cómo funciona</h2>
+      
+      <p class="leading-relaxed">
+        Respondes una encuesta de 8-10 minutos. No pedimos nombre, email ni nada que te identifique. Las respuestas se guardan de forma anónima y solo se publican resultados agregados.
+      </p>
+
+      <p class="leading-relaxed">
+        Si hay menos de 5 respuestas en un grupo, no se muestra (para proteger privacidad). Al terminar, desbloqueas los informes con filtros por región, provincia y familia profesional.
+      </p>
+    </section>
+
+    <section class="space-y-4 lg:space-y-5">
+      <h2 class="font-display text-2xl text-[var(--color-brand-dark)]">Qué NO es</h2>
+      
+      <ul class="list-disc space-y-2 pl-5 leading-relaxed">
+        <li>No es un estudio oficial</li>
+        <li>No está vinculado a academias, sindicatos o centros de formación</li>
+        <li>No tiene muestreo estadístico controlado (es una encuesta abierta)</li>
+        <li>No recoge datos identificativos ni tiene fines comerciales</li>
+      </ul>
+
+      
+    </section>
+
+    <section class="rounded-[var(--radius-lg)] border border-[var(--color-line)] bg-[var(--color-surface)] p-6 sm:p-8 lg:p-10">
+      <h2 class="font-display text-xl lg:text-2xl text-[var(--color-brand-dark)]">Contacto</h2>
+      
+      <p class="mt-3 leading-relaxed">
+        Para consultas sobre metodología, uso de datos o colaboraciones:
+      </p>
+
+      <div class="mt-4 flex flex-col gap-3 sm:flex-row">
+        <button 
+          type="button"
+          id="show-email-btn" 
+          class="btn btn-ghost btn-full sm:w-auto"
+        >
+          <Icon name="send" size={18} />
+          Enviar mensaje
+        </button>
+
+        <a href="/metodologia" class="btn btn-ghost btn-full sm:w-auto">
+          <Icon name="book-open" size={18} />
+          Ver metodología
+        </a>
+      </div>
+
+      <div 
+        id="email-display" 
+        class="mt-4 hidden rounded-md border border-[var(--color-brand-soft)] bg-[var(--color-paper-deep)] px-4 py-3 text-center"
+      >
+        <p class="text-sm text-[var(--color-ink-muted)] mb-2">Puedes contactar en:</p>
+        <p class="font-mono text-base font-medium text-[var(--color-brand-dark)]">
+          hola@inmacontreras.com
+        </p>
+      </div>
+
+      <script>
+        document.getElementById('show-email-btn')?.addEventListener('click', () => {
+          const emailDisplay = document.getElementById('email-display');
+          if (emailDisplay) {
+            emailDisplay.classList.toggle('hidden');
+          }
+        });
+      </script>
+    </section>
+
+  </article>
+</BaseLayout>

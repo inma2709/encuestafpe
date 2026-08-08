@@ -1,0 +1,136 @@
+---
+import type { AutoReport } from "@/types";
+
+interface Props {
+  report: AutoReport;
+  minN: number;
+}
+
+const { report, minN } = Astro.props;
+---
+
+<article class="chapter space-y-10" id={report.slug}>
+  <header class="space-y-5">
+    <div class="flex flex-wrap items-center gap-3">
+      <span class="inline-flex items-center gap-2 rounded-full bg-[var(--color-accent)]/10 px-4 py-1.5 text-sm font-semibold text-[var(--color-accent)]">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        {report.audience}
+      </span>
+    </div>
+    <h2 class="font-display text-3xl text-[var(--color-brand-dark)] sm:text-4xl lg:text-5xl text-balance leading-tight">
+      {report.title}
+    </h2>
+    <p class="text-xl sm:text-2xl text-[var(--color-ink)] font-light leading-relaxed">{report.question}</p>
+    <div class="rounded-lg bg-[var(--color-accent)]/5 border-l-4 border-[var(--color-accent)] px-5 py-4">
+      <p class="text-base leading-relaxed text-[var(--color-ink)]">{report.executiveSummary}</p>
+    </div>
+  </header>
+
+  {
+    report.kpis.length > 0 && (
+      <div class="grid gap-4 sm:grid-cols-2">
+        {report.kpis.map((k) => (
+          <div class="group rounded-[var(--radius-lg)] border-2 border-[var(--color-line)] bg-[var(--color-surface)] px-5 py-6 transition-all hover:border-[var(--color-accent)] hover:shadow-lg">
+            <p class="font-display text-4xl tabular-nums tracking-tight text-[var(--color-brand-dark)] group-hover:text-[var(--color-accent)]">
+              {k.suppressed ? "—" : k.value}
+            </p>
+            <p class="mt-3 text-base leading-snug text-[var(--color-ink)]">{k.label}</p>
+            {k.hint && !k.suppressed && (
+              <p class="mt-2 text-sm text-[var(--color-sage)] leading-relaxed">{k.hint}</p>
+            )}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  {
+    report.sections.map((section) => (
+      <section class="border-t border-[var(--color-line)] pt-10">
+        <div class="mb-6">
+          <h3 class="font-display text-2xl text-[var(--color-brand-dark)] sm:text-3xl">{section.title}</h3>
+          <p class="mt-2 flex flex-wrap items-center gap-2 text-sm text-[var(--color-sage)]">
+            <span class="inline-flex items-center gap-1.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              {section.totalAnswers} respuestas
+            </span>
+            <span>·</span>
+            <span>{section.validSessions} personas</span>
+            {section.suppressed && (
+              <span class="ml-1 inline-flex items-center gap-1 rounded-full bg-[var(--color-danger)]/10 px-3 py-1 text-xs font-medium text-[var(--color-danger)]">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                </svg>
+                Oculto por privacidad
+              </span>
+            )}
+          </p>
+        </div>
+
+        {section.suppressed ? (
+          <div class="rounded-lg bg-[var(--color-paper-deep)] px-5 py-4">
+            <p class="text-sm text-[var(--color-ink-muted)]">
+              ⚠️ No mostramos estos datos para proteger el anonimato. Necesitamos al menos {minN} respuestas para publicar resultados.
+            </p>
+          </div>
+        ) : (
+          <>
+            <ul class="mt-6 space-y-5">
+              {section.rows.map((row) => (
+                <li>
+                  <div class="mb-2.5 flex flex-col gap-1 sm:flex-row sm:justify-between sm:gap-4">
+                    <span class="text-base font-medium text-[var(--color-ink)]">{row.label}</span>
+                    <span class="text-base tabular-nums font-semibold text-[var(--color-brand-dark)]">{row.display}</span>
+                  </div>
+                  <div class="stat-bar">
+                    <span style={`width: ${Math.min(row.percentage, 100)}%`} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+            {section.interpretation && (
+              <div class="mt-8 rounded-lg bg-[var(--color-accent)]/5 border-l-4 border-[var(--color-accent)] px-5 py-4">
+                <p class="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-accent)]">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  ¿Qué significa esto?
+                </p>
+                <p class="text-base leading-relaxed text-[var(--color-ink)]">
+                  {section.interpretation}
+                </p>
+              </div>
+            )}
+          </>
+        )}
+      </section>
+    ))
+  }
+
+  {
+    report.conclusions.length > 0 && (
+      <div class="rounded-[var(--radius-lg)] border-2 border-[var(--color-accent)]/30 bg-gradient-to-br from-[var(--color-accent)]/5 to-transparent p-8">
+        <div class="mb-4 flex items-center gap-2">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <p class="font-display text-xl text-[var(--color-brand-dark)]">Conclusiones</p>
+        </div>
+        <ul class="space-y-3">
+          {report.conclusions.map((c) => (
+            <li class="flex items-start gap-3">
+              <svg class="mt-1 shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="var(--color-accent)" stroke="var(--color-accent)" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 10"/>
+              </svg>
+              <span class="text-base leading-relaxed text-[var(--color-ink)]">{c}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )
+  }
+</article>

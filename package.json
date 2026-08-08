@@ -1,0 +1,28 @@
+{
+  "name": "observatorio-fpe",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 astro dev",
+    "build": "astro build",
+    "preview": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 astro preview",
+    "astro": "astro",
+    "db:apply-v2": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 node scripts/apply-v2.mjs",
+    "db:add-provinces": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 node scripts/add-provinces.mjs",
+    "db:seed-demo": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 node scripts/seed-demo-responses.mjs",
+    "db:fix-provinces": "node scripts/fix-provinces-migration.mjs",
+    "db:debug": "node scripts/debug-cascade.mjs"
+  },
+  "dependencies": {
+    "@astrojs/vercel": "^8.2.5",
+    "@supabase/supabase-js": "^2.55.0",
+    "astro": "^5.13.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.11",
+    "cross-env": "^10.1.0",
+    "tailwindcss": "^4.1.11",
+    "typescript": "^5.9.2"
+  }
+}
