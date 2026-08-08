@@ -176,7 +176,10 @@ export async function getActiveSurvey(slug: string): Promise<ActiveSurvey> {
       helpText: q.help_text,
       position: q.position,
       required: q.is_required,
-      audience: q.audience ?? "all",
+      audience:
+        Array.isArray(q.audience) && q.audience.includes("all")
+          ? "all"
+          : q.audience ?? "all",
       minValue: q.min_value,
       maxValue: q.max_value,
       options,

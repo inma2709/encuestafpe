@@ -17,19 +17,6 @@ export async function submitSurvey(
   }
 
   const active = await getActiveSurvey(input.studySlug);
-  const debugProfileQuestion = active.questions.find(
-    (question) => question.code === "respondent_type",
-  );
-  const answersProfile = debugProfileQuestion
-    ? input.answers.find((answer) => answer.questionId === debugProfileQuestion.id)
-    : null;
-  console.log("[submitSurvey active debug]", {
-    studyId: active.study.id,
-    waveId: active.wave.id,
-    surveyVersionId: active.version.id,
-    profileQuestionId: debugProfileQuestion?.id ?? null,
-    answersProfile: answersProfile ?? null,
-  });
 
   if (active.study.status !== "open") {
     throw new DomainError("Este estudio no acepta nuevas respuestas", "CLOSED");
@@ -89,14 +76,6 @@ function validateAnswers(
   const profileOption = profileQuestion && profileAnswer && "optionId" in profileAnswer
     ? profileQuestion.options.find((option) => option.id === profileAnswer.optionId)
     : undefined;
-  const normalizedRespondentType = profileOption?.code ?? "";
-  console.log("[survey normalized debug]", {
-    respondentType: normalizedRespondentType,
-    profileOptionCode: profileOption?.code ?? null,
-    respondentTypeValid: profileOption
-      ? isRespondentType(profileOption.code)
-      : false,
-  });
   if (!profileOption || !isRespondentType(profileOption.code)) {
     throw new DomainError("Selecciona tu relación con la FPE", "VALIDATION");
   }
