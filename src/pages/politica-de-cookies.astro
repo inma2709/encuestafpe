@@ -1,0 +1,108 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { UNLOCK_COOKIE, UNLOCK_TTL_SECONDS } from "@/lib/config";
+
+const unlockDurationDays = Math.round(UNLOCK_TTL_SECONDS / 60 / 60 / 24);
+---
+
+<BaseLayout title="Política de cookies">
+  <article class="fade-up space-y-10 text-[var(--color-ink-muted)] lg:space-y-12">
+    <header class="space-y-4">
+      <p class="eyebrow">Transparencia</p>
+      <h1 class="font-display text-3xl text-balance sm:text-4xl lg:text-5xl">
+        Política de cookies
+      </h1>
+      <p class="lede">
+        Esta web utiliza únicamente almacenamiento técnico propio. No utiliza cookies
+        publicitarias, analíticas ni de seguimiento.
+      </p>
+    </header>
+
+    <section class="space-y-3 lg:space-y-4">
+      <h2 class="font-display text-2xl text-[var(--color-brand-dark)]">Qué es una cookie</h2>
+      <p class="leading-relaxed">
+        Una cookie es un pequeño archivo que una web guarda en el navegador. Puede servir, por
+        ejemplo, para mantener una función, recordar una preferencia o reconocer que un navegador
+        ya realizó una acción.
+      </p>
+    </section>
+
+    <section class="space-y-4">
+      <h2 class="font-display text-2xl text-[var(--color-brand-dark)]">Cookie utilizada</h2>
+      <div class="overflow-x-auto rounded-[var(--radius-md)] border border-[var(--color-line)]">
+        <table class="w-full min-w-[38rem] border-collapse text-left text-sm">
+          <caption class="sr-only">Características de la cookie técnica de participación</caption>
+          <thead class="bg-[var(--color-paper)] text-[var(--color-ink)]">
+            <tr>
+              <th class="px-4 py-3 font-semibold" scope="col">Nombre</th>
+              <th class="px-4 py-3 font-semibold" scope="col">Proveedor</th>
+              <th class="px-4 py-3 font-semibold" scope="col">Categoría</th>
+              <th class="px-4 py-3 font-semibold" scope="col">Duración</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-t border-[var(--color-line)]">
+              <td class="px-4 py-3"><code>{UNLOCK_COOKIE}_&lt;estudio&gt;</code></td>
+              <td class="px-4 py-3">Propia</td>
+              <td class="px-4 py-3">Técnica / necesaria</td>
+              <td class="px-4 py-3">{unlockDurationDays} días</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="leading-relaxed">
+        Se crea en el servidor únicamente cuando la respuesta se ha guardado correctamente. Su
+        valor es un token aleatorio y opaco: no contiene el nombre, el correo, las respuestas, datos
+        salariales ni identificadores internos de Supabase. En la base de datos se conserva solo un
+        hash del token, asociado a la sesión de respuesta, para comprobar que la participación
+        existe.
+      </p>
+      <p class="leading-relaxed">
+        Su finalidad es recordar que este navegador ya ha participado, impedir reenvíos desde él y
+        permitir el acceso a los resultados agregados previsto por la encuesta. No permite consultar
+        las respuestas individuales ni funciona como una cuenta de usuario.
+      </p>
+      <p class="leading-relaxed">
+        La cookie se envía con <code>HttpOnly</code>, por lo que JavaScript no puede leerla;
+        <code>SameSite=Lax</code>; <code>Path=/</code>; y <code>Secure</code> en producción, para que
+        solo viaje mediante HTTPS.
+      </p>
+    </section>
+
+    <section class="space-y-3 lg:space-y-4">
+      <h2 class="font-display text-2xl text-[var(--color-brand-dark)]">
+        Preferencia del aviso
+      </h2>
+      <p class="leading-relaxed">
+        Al pulsar «Entendido», el navegador guarda localmente la clave
+        <code>fpe_cookie_notice_v1</code> con el valor <code>dismissed</code>. No es una cookie, no se
+        envía al servidor y no contiene datos personales. Permanece hasta que se borren los datos
+        locales del sitio y solo evita que vuelva a mostrarse el aviso informativo.
+      </p>
+    </section>
+
+    <section class="space-y-3 lg:space-y-4">
+      <h2 class="font-display text-2xl text-[var(--color-brand-dark)]">
+        Cómo eliminar estos datos
+      </h2>
+      <p class="leading-relaxed">
+        Puedes eliminarlos desde la configuración de privacidad o datos de sitios de tu navegador,
+        buscando este dominio y borrando sus cookies y almacenamiento local. Los nombres y pasos
+        concretos dependen del navegador.
+      </p>
+      <p class="leading-relaxed">
+        Si eliminas la cookie técnica, el sistema podría dejar de reconocer que este navegador ya ha
+        participado. Borrar la preferencia del aviso hará que el mensaje vuelva a aparecer.
+      </p>
+    </section>
+
+    <section class="space-y-3 lg:space-y-4">
+      <h2 class="font-display text-2xl text-[var(--color-brand-dark)]">Limitaciones</h2>
+      <p class="leading-relaxed">
+        La cookie reduce duplicados accidentales, pero no garantiza «una persona, una respuesta».
+        Otro navegador, otro dispositivo o una sesión privada dispone de almacenamiento separado.
+        No usamos técnicas de fingerprinting para intentar vincularlos.
+      </p>
+    </section>
+  </article>
+</BaseLayout>

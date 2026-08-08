@@ -3,11 +3,16 @@ import "@/styles/global.css";
 import { ViewTransitions } from "astro:transitions";
 import SiteHeader from "@/components/SiteHeader.astro";
 import SiteFooter from "@/components/SiteFooter.astro";
+import CookieNotice from "@/components/CookieNotice.astro";
 import { SITE_NAME } from "@/lib/config";
 
 interface Props {
   title?: string;
   description?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+  canonical?: string;
   /** narrow = encuesta; wide = home/informes; default = lectura */
   width?: "narrow" | "default" | "wide";
   bare?: boolean;
@@ -15,12 +20,21 @@ interface Props {
 
 const {
   title = SITE_NAME,
-  description = "Estudio independiente y anónimo sobre la situación de los docentes de Formación Profesional para el Empleo en España.",
+  description = "Estudio independiente y anónimo sobre la situación laboral y profesional de los docentes de Formación Profesional para el Empleo en España.",
+  ogTitle = title,
+  ogDescription = description,
+  ogImage = "/encuestas.png",
+  canonical,
   width = "default",
   bare = false,
 } = Astro.props;
 
-const fullTitle = title === SITE_NAME ? title : `${title} · Observatorio FPE`;
+const fullTitle = title === SITE_NAME || title.includes("Observatorio FPE")
+  ? title
+  : `${title} · Observatorio FPE`;
+const siteUrl = Astro.site ?? new URL("https://encuestafpe.vercel.app");
+const canonicalUrl = new URL(canonical ?? Astro.url.pathname, siteUrl);
+const socialImageUrl = new URL(ogImage, siteUrl);
 const shellClass =
   width === "wide" ? "shell-wide" : width === "narrow" ? "shell" : "shell";
 ---
@@ -33,6 +47,24 @@ const shellClass =
     <meta name="description" content={description} />
     <meta name="theme-color" content="#f6f3ec" />
     <title>{fullTitle}</title>
+    <link rel="canonical" href={canonicalUrl} />
+
+    <meta property="og:title" content={ogTitle} />
+    <meta property="og:description" content={ogDescription} />
+    <meta property="og:image" content={socialImageUrl} />
+    <meta property="og:image:width" content="1254" />
+    <meta property="og:image:height" content="1254" />
+    <meta property="og:image:alt" content="Encuesta sobre la Formación Profesional para el Empleo" />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:locale" content="es_ES" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={ogTitle} />
+    <meta name="twitter:description" content={ogDescription} />
+    <meta name="twitter:image" content={socialImageUrl} />
+    <meta name="twitter:image:alt" content="Encuesta sobre la Formación Profesional para el Empleo" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -48,5 +80,6 @@ const shellClass =
       <slot />
     </main>
     {!bare && <SiteFooter />}
+    <CookieNotice />
   </body>
 </html>

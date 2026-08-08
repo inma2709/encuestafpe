@@ -1,0 +1,63 @@
+<aside
+  id="cookie-notice"
+  class="fixed inset-x-3 bottom-3 z-50 hidden max-h-[min(70vh,28rem)] overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-lift)] sm:inset-x-auto sm:right-5 sm:bottom-5 sm:w-[min(34rem,calc(100vw-2.5rem))] sm:p-5"
+  role="region"
+  aria-labelledby="cookie-notice-title"
+>
+  <div class="space-y-3">
+    <div class="space-y-1.5">
+      <h2 id="cookie-notice-title" class="font-display text-xl text-[var(--color-brand-dark)]">
+        Cookies necesarias
+      </h2>
+      <p class="text-sm leading-6 text-[var(--color-ink-muted)]">
+        Esta web utiliza únicamente cookies técnicas necesarias para el funcionamiento de la
+        encuesta, entre ellas una cookie que permite recordar si este navegador ya ha participado
+        y ayuda a evitar respuestas duplicadas. No utilizamos cookies publicitarias ni de
+        seguimiento.
+      </p>
+    </div>
+
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <button type="button" id="cookie-notice-dismiss" class="btn btn-primary btn-full sm:w-auto">
+        Entendido
+      </button>
+      <a
+        href="/politica-de-cookies"
+        class="inline-flex min-h-11 items-center justify-center px-3 text-sm font-medium text-[var(--color-brand)] underline decoration-[var(--color-brand-soft)] underline-offset-4 transition-colors hover:text-[var(--color-brand-dark)]"
+      >
+        Política de cookies
+      </a>
+    </div>
+  </div>
+</aside>
+
+<script is:inline data-astro-rerun>
+  (() => {
+    const storageKey = "fpe_cookie_notice_v1";
+    const notice = document.getElementById("cookie-notice");
+    const dismissButton = document.getElementById("cookie-notice-dismiss");
+    if (!(notice instanceof HTMLElement) || !(dismissButton instanceof HTMLButtonElement)) return;
+
+    let dismissed = false;
+    try {
+      dismissed = window.localStorage.getItem(storageKey) === "dismissed";
+    } catch {
+      // Storage can be unavailable in privacy modes. The notice remains dismissible for this view.
+    }
+
+    if (!dismissed) notice.classList.remove("hidden");
+
+    dismissButton.addEventListener(
+      "click",
+      () => {
+        try {
+          window.localStorage.setItem(storageKey, "dismissed");
+        } catch {
+          // Dismissing the notice must not depend on browser storage being available.
+        }
+        notice.classList.add("hidden");
+      },
+      { once: true },
+    );
+  })();
+</script>

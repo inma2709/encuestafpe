@@ -4,6 +4,7 @@ import vercel from "@astrojs/vercel";
 import { fileURLToPath } from "node:url";
 
 export default defineConfig({
+  site: "https://encuestafpe.vercel.app",
   output: "server",
   adapter: vercel(),
   security: {
