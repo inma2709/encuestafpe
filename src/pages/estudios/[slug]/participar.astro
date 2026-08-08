@@ -3,41 +3,19 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 import SurveyForm from "@/components/SurveyForm.astro";
 import { getUnlockCookie, setUnlockCookie } from "@/lib/cookies";
 import { DomainError } from "@/types";
-import { getActiveSurvey, isUnlockTokenValid, submitSurveyForm } from "@/services";
+import { getActiveSurvey, isUnlockTokenValid } from "@/services";
 
 const { slug } = Astro.params;
 if (!slug) {
   return Astro.redirect("/");
 }
 
-let errorMessage: string | undefined;
 const unlockToken = getUnlockCookie(Astro.cookies, slug);
 const alreadyCompleted = await isUnlockTokenValid(slug, unlockToken);
 
 // Migrate valid cookies issued before the API needed the site-wide cookie path.
 if (alreadyCompleted && unlockToken) {
   setUnlockCookie(Astro.cookies, slug, unlockToken);
-}
-
-if (alreadyCompleted && Astro.request.method === "POST") {
-  Astro.response.status = 409;
-}
-
-if (Astro.request.method === "POST" && !alreadyCompleted) {
-  try {
-    const form = await Astro.request.formData();
-    const result = await submitSurveyForm(form, slug);
-
-    setUnlockCookie(Astro.cookies, result.studySlug, result.unlockToken);
-    return Astro.redirect(`/estudios/${result.studySlug}/resultados?submitted=1`);
-  } catch (err) {
-    console.error("Survey submission failed", {
-      studySlug: slug,
-      error: err,
-    });
-    Astro.response.status = err instanceof DomainError && err.code === "VALIDATION" ? 400 : 500;
-    errorMessage = "No se ha podido enviar la encuesta. Inténtalo de nuevo.";
-  }
 }
 
 let survey;
@@ -86,7 +64,6 @@ if (survey.study.status !== "open") {
       <SurveyForm
         questions={survey.questions}
         studySlug={survey.study.slug}
-        errorMessage={errorMessage}
       />
     )
   }

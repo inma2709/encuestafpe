@@ -21,8 +21,9 @@ const respondentTypeQuestion = questions.find((q) => q.code === "respondent_type
   <div class="progress-rail" aria-hidden="true"><span id="progress-bar" style="width: 0%"></span></div>
 </div>
 
-<form method="POST" novalidate class="space-y-5 sm:space-y-7" id="survey-form">
+<form novalidate class="space-y-5 sm:space-y-7" id="survey-form">
   <input type="hidden" name="studySlug" value={studySlug} />
+  <input type="hidden" name="respondentType" id="respondentType" value="" />
   <div class="absolute -left-[9999px]" aria-hidden="true"><label>Website<input type="text" name="website" tabindex="-1" autocomplete="off" /></label></div>
   <input type="hidden" name="durationMs" id="durationMs" value="0" />
 
@@ -68,7 +69,8 @@ const respondentTypeQuestion = questions.find((q) => q.code === "respondent_type
   let isSubmitting = false;
 
   function controls(fieldset) { return Array.from(fieldset.querySelectorAll("input, select, textarea")); }
-  function respondentType() { const selected = respondentTypeId && form?.querySelector(`input[name="q_${respondentTypeId}"]:checked`); return selected instanceof HTMLInputElement ? selected.getAttribute("data-option-code") : null; }
+  function respondentType() { const selected = respondentTypeId && form?.querySelector(`[name="q_${respondentTypeId}"]:checked, [name="q_${respondentTypeId}"] option:checked`); return selected instanceof HTMLElement ? selected.getAttribute("data-option-code") : null; }
+  function syncRespondentType() { const input = document.getElementById("respondentType"); if (input instanceof HTMLInputElement) input.value = respondentType() || ""; }
   function answered(fieldset) {
     const id = fieldset.getAttribute("data-question-id"); if (!id) return false;
     const radios = form?.querySelectorAll(`input[name="q_${id}"][type="radio"]`); const checks = form?.querySelectorAll(`input[name="q_${id}"][type="checkbox"]`);
@@ -113,6 +115,8 @@ const respondentTypeQuestion = questions.find((q) => q.code === "respondent_type
   function enforceMax(group) { const fieldset = group.closest("fieldset"); const max = Number(fieldset?.getAttribute("data-max-selections") || "0"); if (!max) return; const checked = Array.from(group.querySelectorAll("input.multi-option")).filter((node) => node instanceof HTMLInputElement && node.checked); if (checked.length > max && checked.at(-1) instanceof HTMLInputElement) checked.at(-1).checked = false; const hint = fieldset?.querySelector("[data-multi-hint]"); if (hint) hint.textContent = `Seleccionadas ${Math.min(checked.length, max)} de ${max} máximo.`; }
   previousBtn?.addEventListener("click", () => { currentStep -= 1; render({ focus: true }); });
   nextBtn?.addEventListener("click", () => { const active = steps()[currentStep]; if (active && validStep(active)) { currentStep += 1; render({ focus: true }); } });
+  form?.addEventListener("change", syncRespondentType);
+  form?.addEventListener("submit", syncRespondentType);
   form?.addEventListener("change", (event) => { const target = event.target; if (target instanceof HTMLInputElement && target.name === `q_${respondentTypeId}`) { currentStep = 0; clearInapplicable(); updateQuestionCopy(); } if (target instanceof HTMLInputElement && target.name === `q_${familiesId}`) filterPrincipalFamily(); const group = target instanceof Element ? target.closest("[data-multi-group]") : null; if (group instanceof HTMLElement) enforceMax(group); clearInapplicable(); render(); const fieldset = target instanceof Element ? target.closest("fieldset") : null; if (fieldset instanceof HTMLElement && answered(fieldset)) clearError(fieldset); });
   form?.addEventListener("input", (event) => { const fieldset = event.target instanceof Element ? event.target.closest("fieldset") : null; if (fieldset instanceof HTMLElement && answered(fieldset)) clearError(fieldset); render(); });
   function setSubmitting(submitting) { if (form instanceof HTMLFormElement) form.setAttribute("aria-busy", String(submitting)); if (submitBtn instanceof HTMLButtonElement) submitBtn.disabled = submitting; const text = document.getElementById("submit-text"), spinner = document.getElementById("submit-spinner"); if (text) text.textContent = submitting ? "Enviando..." : "Enviar respuestas"; if (spinner) spinner.classList.toggle("hidden", !submitting); }

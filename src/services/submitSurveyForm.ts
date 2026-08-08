@@ -17,9 +17,13 @@ export async function submitSurveyForm(
   const answers: AnswerInput[] = [];
   const profileQuestion = active.questions.find((question) => question.code === "respondent_type");
   const profileValue = profileQuestion ? String(form.get(`q_${profileQuestion.id}`) ?? "") : "";
-  const respondentType = profileQuestion?.options.find((option) => option.id === profileValue)?.code ?? "";
+  const profileCode = String(form.get("respondentType") ?? "");
+  const profileOption = profileQuestion?.options.find(
+    (option) => option.id === profileValue || option.code === profileCode,
+  );
+  const respondentType = profileOption?.code ?? "";
 
-  if (!profileQuestion || !isRespondentType(respondentType)) {
+  if (!profileQuestion || !profileOption || !isRespondentType(respondentType)) {
     throw new DomainError("Selecciona tu relación con la FPE", "VALIDATION");
   }
 
@@ -35,7 +39,7 @@ export async function submitSurveyForm(
       continue;
     }
 
-    const value = form.get(key);
+    const value = question.id === profileQuestion.id ? profileOption.id : form.get(key);
     if (value == null || String(value).trim() === "") continue;
 
     if (question.type === "text") {

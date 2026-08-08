@@ -757,6 +757,11 @@
     width: 100%;
   }
 
+  .survey-navigation #next-btn,
+  .survey-navigation #submit-btn {
+    order: -1;
+  }
+
   @media (min-width: 640px) {
     .survey-navigation {
       display: flex;
@@ -766,6 +771,11 @@
     .survey-navigation .btn {
       width: auto;
       min-width: 9rem;
+    }
+
+    .survey-navigation #next-btn,
+    .survey-navigation #submit-btn {
+      order: initial;
     }
 
     .survey-navigation .btn-primary {
