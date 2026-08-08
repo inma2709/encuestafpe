@@ -10,7 +10,8 @@ export function setUnlockCookie(
     httpOnly: true,
     secure: import.meta.env.PROD,
     sameSite: "lax",
-    path: `/estudios/${studySlug}`,
+    // The API route must receive this HttpOnly cookie to prevent duplicate submissions.
+    path: "/",
     maxAge: UNLOCK_TTL_SECONDS,
   });
 }

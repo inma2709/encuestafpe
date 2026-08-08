@@ -69,7 +69,7 @@ export function parseReportFilters(
   };
 }
 
-export async function loadSurveyDataset(studySlug: string): Promise<SurveyDataset> {
+export async function loadSurveySessions(studySlug: string) {
   const active = await getActiveSurvey(studySlug);
   const admin = getSupabaseAdmin();
 
@@ -81,7 +81,12 @@ export async function loadSurveyDataset(studySlug: string): Promise<SurveyDatase
 
   if (sessionsError) throw new DomainError(sessionsError.message, "INTERNAL");
 
-  const sessionList = sessions ?? [];
+  return { active, sessions: sessions ?? [] };
+}
+
+export async function loadSurveyDataset(studySlug: string): Promise<SurveyDataset> {
+  const { active, sessions: sessionList } = await loadSurveySessions(studySlug);
+  const admin = getSupabaseAdmin();
   let answers: AnswerRow[] = [];
   if (sessionList.length > 0) {
     const { data, error } = await admin

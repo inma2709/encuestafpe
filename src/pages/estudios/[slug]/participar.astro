@@ -1,9 +1,9 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import SurveyForm from "@/components/SurveyForm.astro";
-import { setUnlockCookie } from "@/lib/cookies";
+import { getUnlockCookie, setUnlockCookie } from "@/lib/cookies";
 import { DomainError } from "@/types";
-import { getActiveSurvey, submitSurveyForm } from "@/services";
+import { getActiveSurvey, isUnlockTokenValid, submitSurveyForm } from "@/services";
 
 const { slug } = Astro.params;
 if (!slug) {
@@ -11,8 +11,19 @@ if (!slug) {
 }
 
 let errorMessage: string | undefined;
+const unlockToken = getUnlockCookie(Astro.cookies, slug);
+const alreadyCompleted = await isUnlockTokenValid(slug, unlockToken);
 
-if (Astro.request.method === "POST") {
+// Migrate valid cookies issued before the API needed the site-wide cookie path.
+if (alreadyCompleted && unlockToken) {
+  setUnlockCookie(Astro.cookies, slug, unlockToken);
+}
+
+if (alreadyCompleted && Astro.request.method === "POST") {
+  Astro.response.status = 409;
+}
+
+if (Astro.request.method === "POST" && !alreadyCompleted) {
   try {
     const form = await Astro.request.formData();
     const result = await submitSurveyForm(form, slug);
@@ -58,9 +69,25 @@ if (survey.study.status !== "open") {
     </p>
   </div>
 
-  <SurveyForm
-    questions={survey.questions}
-    studySlug={survey.study.slug}
-    errorMessage={errorMessage}
-  />
+  {
+    alreadyCompleted ? (
+      <section class="chapter fade-up space-y-5" role="status">
+        <p class="eyebrow">Encuesta ya completada</p>
+        <h2 class="font-display text-2xl sm:text-3xl">Ya has participado en esta encuesta.</h2>
+        <p class="text-[var(--color-ink-muted)]">
+          Gracias por tu colaboración. Desde este navegador no es necesario volver a rellenarla.
+        </p>
+        <div class="flex flex-col gap-3 sm:flex-row">
+          <a href="/informes" class="btn btn-primary btn-full sm:w-auto">Ver informes</a>
+          <a href={`/estudios/${survey.study.slug}`} class="btn btn-ghost btn-full sm:w-auto">Volver al estudio</a>
+        </div>
+      </section>
+    ) : (
+      <SurveyForm
+        questions={survey.questions}
+        studySlug={survey.study.slug}
+        errorMessage={errorMessage}
+      />
+    )
+  }
 </BaseLayout>

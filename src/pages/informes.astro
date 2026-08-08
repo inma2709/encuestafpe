@@ -1,8 +1,9 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import ReportsDashboard from "@/components/ReportsDashboard.astro";
+import { getUnlockCookie } from "@/lib/cookies";
 import { DomainError } from "@/types";
-import { getReports, parseReportFilters } from "@/services";
+import { assertUnlockToken, getReports, parseReportFilters } from "@/services";
 
 const slug = "docentes-fpe-2026";
 const filters = parseReportFilters(Astro.url.searchParams);
@@ -10,22 +11,37 @@ const compare = Astro.url.searchParams.get("comparar") || "";
 
 let view;
 let errorMessage: string | undefined;
+let locked = false;
 
 try {
+  await assertUnlockToken(slug, getUnlockCookie(Astro.cookies, slug));
   view = await getReports(slug, filters, compare);
 } catch (err) {
-  errorMessage =
-    err instanceof DomainError
-      ? err.message
-      : err instanceof Error
+  if (err instanceof DomainError && err.code === "FORBIDDEN") {
+    locked = true;
+  } else {
+    errorMessage =
+      err instanceof DomainError
         ? err.message
-        : "Error al cargar informes";
+        : err instanceof Error
+          ? err.message
+          : "Error al cargar informes";
+  }
 }
 ---
 
 <BaseLayout title="Informes" width="default">
   {
-    errorMessage ? (
+    locked ? (
+      <section class="fade-up space-y-6">
+        <p class="eyebrow">Acceso restringido</p>
+        <h1 class="font-display text-3xl sm:text-4xl lg:text-5xl">Informes</h1>
+        <p class="lede">Completa la encuesta para acceder a los informes.</p>
+        <a href={`/estudios/${slug}/participar`} class="btn btn-primary btn-full sm:w-auto">
+          Completar encuesta
+        </a>
+      </section>
+    ) : errorMessage ? (
       <section class="fade-up space-y-6">
         <h1 class="font-display text-3xl sm:text-4xl lg:text-5xl">Informes</h1>
         <p class="text-[var(--color-ink-muted)]">{errorMessage}</p>

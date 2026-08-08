@@ -1,30 +1,16 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import Icon from "@/components/Icon.astro";
-import { getSupabaseAnon } from "@/lib/supabase";
+import { loadSurveySessions } from "@/services";
 
-const supabase = getSupabaseAnon();
-
-// Contar participantes únicos (sesiones de respuesta completadas)
-let participantCount = 247; // fallback por defecto
+const studySlug = "docentes-fpe-2026";
+let participantCount = 0;
 
 try {
-  const { count, error } = await supabase
-    .from("response_sessions")
-    .select("*", { count: "exact", head: true })
-    .eq("survey_version_id", "b1000000-0000-4000-8000-000000000012"); // v9
-
-  if (!error && count !== null) {
-    participantCount = count;
-  }
+  const { sessions } = await loadSurveySessions(studySlug);
+  participantCount = sessions.length;
 } catch (error) {
   console.error("Error al obtener contador de participantes:", error);
-  // Usar el fallback, la página sigue renderizando correctamente
-}
-
-// Caché HTTP: actualiza cada 5 minutos
-if (Astro.response.headers) {
-  Astro.response.headers.set("Cache-Control", "public, max-age=300, s-maxage=300");
 }
 ---
 
@@ -40,7 +26,7 @@ if (Astro.response.headers) {
           Este estudio recoge la experiencia de docentes de Formación Profesional para el Empleo para conocer su realidad profesional, detectar tendencias y hacerlas visibles.
         </p>
         <p class="lede home-hero__lede">
-          Participa en una encuesta anónima de pocos minutos y ayuda a construir, con datos del propio colectivo, una visión más clara de las condiciones de quienes impartimos FPE.
+          Participa en una encuesta anónima de pocos minutos y ayuda a construir, con datos del propio colectivo, una visión más clara de las condiciones y la situación de quienes impartimos FPE.
         </p>
 
         <div class="home-hero__actions">
@@ -69,8 +55,8 @@ if (Astro.response.headers) {
       <figure class="home-hero__figure fade-up" style="animation-delay: 100ms;">
         <img
           src="/encuestas.png"
-          width="1254"
-          height="1254"
+          width="920"
+          height="920"
           alt="Ilustración de docentes participando en una encuesta"
           class="home-hero__image"
         />

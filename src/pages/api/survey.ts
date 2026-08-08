@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
-import { setUnlockCookie } from "@/lib/cookies";
+import { getUnlockCookie, setUnlockCookie } from "@/lib/cookies";
 import { DomainError } from "@/types";
+import { isUnlockTokenValid } from "@/services";
 import { submitSurveyForm } from "@/services/submitSurveyForm";
 
 function json(body: Record<string, unknown>, status: number): Response {
@@ -23,6 +24,16 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   try {
     const form = await request.formData();
     const studySlug = String(form.get("studySlug") ?? "");
+    const existingToken = getUnlockCookie(cookies, studySlug);
+    if (await isUnlockTokenValid(studySlug, existingToken)) {
+      return json(
+        {
+          ok: false,
+          error: "Esta encuesta ya ha sido completada desde este navegador.",
+        },
+        409,
+      );
+    }
     const result = await submitSurveyForm(form, studySlug);
 
     setUnlockCookie(cookies, result.studySlug, result.unlockToken);

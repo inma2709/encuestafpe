@@ -12,12 +12,18 @@ export async function assertUnlockToken(
   studySlug: string,
   token: string | undefined,
 ): Promise<void> {
-  if (!token) {
-    throw new DomainError(
-      "Completa la encuesta para ver los resultados",
-      "FORBIDDEN",
-    );
-  }
+  if (await isUnlockTokenValid(studySlug, token)) return;
+  throw new DomainError(
+    "Completa la encuesta para ver los resultados",
+    "FORBIDDEN",
+  );
+}
+
+export async function isUnlockTokenValid(
+  studySlug: string,
+  token: string | undefined,
+): Promise<boolean> {
+  if (!token) return false;
 
   const active = await getActiveSurvey(studySlug);
   const admin = getSupabaseAdmin();
@@ -33,12 +39,7 @@ export async function assertUnlockToken(
   if (error) {
     throw new DomainError(error.message, "INTERNAL");
   }
-  if (!data) {
-    throw new DomainError(
-      "Completa la encuesta para ver los resultados",
-      "FORBIDDEN",
-    );
-  }
+  return !!data;
 }
 
 export async function getResults(studySlug: string): Promise<ResultsView> {
