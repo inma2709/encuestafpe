@@ -26,22 +26,21 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const studySlug = String(form.get("studySlug") ?? "");
     const existingToken = getUnlockCookie(cookies, studySlug);
     if (await isUnlockTokenValid(studySlug, existingToken)) {
-      return json(
-        {
-          ok: false,
-          error: "Esta encuesta ya ha sido completada desde este navegador.",
-        },
-        409,
-      );
+      return json({ ok: false, error: "Esta encuesta ya ha sido completada desde este navegador." }, 409);
     }
     const result = await submitSurveyForm(form, studySlug);
-
     setUnlockCookie(cookies, result.studySlug, result.unlockToken);
     return json({ ok: true }, 200);
   } catch (error) {
     console.error("Survey API submission failed", error);
+    const isValidationError = error instanceof DomainError && error.code === "VALIDATION";
     return json(
-      { ok: false, error: "No se ha podido enviar la encuesta. Inténtalo de nuevo." },
+      {
+        ok: false,
+        error: isValidationError
+          ? error.message
+          : "No se ha podido enviar la encuesta. Inténtalo de nuevo.",
+      },
       statusForError(error),
     );
   }
