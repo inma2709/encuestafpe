@@ -23,6 +23,25 @@ export async function submitSurveyForm(
   );
   const respondentType = profileOption?.code ?? "";
 
+  console.log("[survey debug]", {
+    respondentType,
+    profileQuestionFound: Boolean(profileQuestion),
+    profileQuestionCode: profileQuestion?.code ?? null,
+    profileQuestionId: profileQuestion?.id ?? null,
+    profileOptions: profileQuestion?.options.map((option) => ({
+      id: option.id,
+      code: option.code,
+      active: true,
+    })) ?? [],
+    profileOptionFound: Boolean(profileOption),
+    profileOptionCode: profileOption?.code ?? null,
+    respondentTypeValid: isRespondentType(respondentType),
+    studySlug: active.study.slug,
+    studyId: active.study.id,
+    waveId: active.wave.id,
+    surveyVersionId: active.version.id,
+  });
+
   if (!profileQuestion || !profileOption || !isRespondentType(respondentType)) {
     throw new DomainError("Selecciona tu relación con la FPE", "VALIDATION");
   }
