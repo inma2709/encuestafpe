@@ -478,6 +478,23 @@
     box-shadow: var(--shadow-lift);
   }
 
+  .chapter.has-validation-error {
+    border-color: var(--color-danger);
+    box-shadow: 0 0 0 3px rgb(143 61 53 / 0.12);
+  }
+
+  .validation-message {
+    display: none;
+    margin-top: 0.875rem;
+    color: var(--color-danger);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .chapter.has-validation-error .validation-message {
+    display: block;
+  }
+
   .chapter.locked {
     opacity: 0.4;
     pointer-events: none;

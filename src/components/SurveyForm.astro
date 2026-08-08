@@ -53,7 +53,7 @@ const estMinutes = Math.max(8, Math.round(requiredCount * 0.35));
   </div>
 </div>
 
-<form method="POST" class="space-y-5 sm:space-y-7 lg:space-y-9" id="survey-form" data-est-minutes={estMinutes}>
+<form method="POST" novalidate class="space-y-5 sm:space-y-7 lg:space-y-9" id="survey-form" data-est-minutes={estMinutes}>
   <input type="hidden" name="studySlug" value={studySlug} />
   <div class="absolute -left-[9999px]" aria-hidden="true">
     <label>
@@ -90,6 +90,7 @@ const estMinutes = Math.max(8, Math.round(requiredCount * 0.35));
         <p class="locked-message" role="status" aria-live="polite">
           Completa la pregunta obligatoria anterior para desbloquear esta.
         </p>
+        <p class="validation-message" data-validation-message role="alert" aria-live="polite"></p>
         {q.helpText && (
           <p class="mt-3 text-[0.875rem] leading-relaxed text-[var(--color-ink-muted)] break-words">{q.helpText}</p>
         )}
@@ -350,13 +351,25 @@ const estMinutes = Math.max(8, Math.round(requiredCount * 0.35));
     }
   }
 
-  form?.addEventListener("change", () => {
+  form?.addEventListener("change", (event) => {
     updateProgress();
     updateLockState();
+    const fieldset = event.target instanceof Element
+      ? event.target.closest("fieldset[data-question-id]")
+      : null;
+    if (fieldset instanceof HTMLElement && isQuestionAnswered(fieldset)) {
+      clearQuestionError(fieldset);
+    }
   });
-  form?.addEventListener("input", () => {
+  form?.addEventListener("input", (event) => {
     updateProgress();
     updateLockState();
+    const fieldset = event.target instanceof Element
+      ? event.target.closest("fieldset[data-question-id]")
+      : null;
+    if (fieldset instanceof HTMLElement && isQuestionAnswered(fieldset)) {
+      clearQuestionError(fieldset);
+    }
   });
   updateProgress();
   updateLockState();
@@ -477,7 +490,64 @@ const estMinutes = Math.max(8, Math.round(requiredCount * 0.35));
   }
   toggleOpenComment();
 
+  function getVisibleQuestionFieldsets() {
+    return Array.from(form?.querySelectorAll("fieldset[data-question-id]") ?? []).filter(
+      (fieldset): fieldset is HTMLElement =>
+        fieldset instanceof HTMLElement && !fieldset.classList.contains("hidden"),
+    );
+  }
+
+  function getQuestionControls(fieldset: HTMLElement) {
+    return Array.from(fieldset.querySelectorAll("input, select, textarea")).filter(
+      (control): control is HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement =>
+        control instanceof HTMLInputElement ||
+        control instanceof HTMLSelectElement ||
+        control instanceof HTMLTextAreaElement,
+    );
+  }
+
+  function setQuestionError(fieldset: HTMLElement, message: string) {
+    fieldset.classList.add("has-validation-error");
+    const error = fieldset.querySelector("[data-validation-message]");
+    if (error) error.textContent = message;
+    getQuestionControls(fieldset).forEach((control) => control.setAttribute("aria-invalid", "true"));
+  }
+
+  function clearQuestionError(fieldset: HTMLElement) {
+    fieldset.classList.remove("has-validation-error");
+    const error = fieldset.querySelector("[data-validation-message]");
+    if (error) error.textContent = "";
+    getQuestionControls(fieldset).forEach((control) => control.removeAttribute("aria-invalid"));
+  }
+
+  function focusQuestion(fieldset: HTMLElement) {
+    fieldset.scrollIntoView({ behavior: "smooth", block: "center" });
+    getQuestionControls(fieldset)[0]?.focus({ preventScroll: true });
+  }
+
   function validateClient() {
+    const fieldsets = getVisibleQuestionFieldsets();
+    fieldsets.forEach(clearQuestionError);
+    let firstInvalid: HTMLElement | null = null;
+
+    for (const fieldset of fieldsets) {
+      const required = fieldset.getAttribute("data-required") === "1" ||
+        getQuestionControls(fieldset).some((control) => control.required);
+      if (required && !isQuestionAnswered(fieldset)) {
+        setQuestionError(fieldset, "Responde esta pregunta para poder continuar.");
+        firstInvalid ??= fieldset;
+      } else if (getQuestionControls(fieldset).some(
+        (control) => !control.disabled && !control.checkValidity(),
+      )) {
+        setQuestionError(fieldset, "Revisa la respuesta para poder continuar.");
+        firstInvalid ??= fieldset;
+      }
+    }
+    if (firstInvalid) {
+      focusQuestion(firstInvalid);
+      return false;
+    }
+
     if (familiesId && familyId) {
       const selectedFamilies = Array.from(
         form?.querySelectorAll(`input[name="q_${familiesId}"]:checked`) ?? [],
@@ -495,7 +565,14 @@ const estMinutes = Math.max(8, Math.round(requiredCount * 0.35));
         const ok =
           selectedIds.includes(principal.value) || selectedCodes.includes(pCode);
         if (!ok) {
-          alert("La familia principal debe estar entre las familias en las que has impartido.");
+          const fieldset = principal.closest("fieldset[data-question-id]");
+          if (fieldset instanceof HTMLElement) {
+            setQuestionError(
+              fieldset,
+              "La familia principal debe estar entre las familias en las que has impartido.",
+            );
+            focusQuestion(fieldset);
+          }
           return false;
         }
       }
@@ -503,7 +580,11 @@ const estMinutes = Math.max(8, Math.round(requiredCount * 0.35));
     if (missingYesSelected() && openId) {
       const ta = document.getElementById(`text_${openId}`);
       if (ta instanceof HTMLTextAreaElement && ta.value.trim() === "") {
-        alert("Describe el problema que no aparece en la lista.");
+        const fieldset = ta.closest("fieldset[data-question-id]");
+        if (fieldset instanceof HTMLElement) {
+          setQuestionError(fieldset, "Describe el problema que no aparece en la lista.");
+          focusQuestion(fieldset);
+        }
         return false;
       }
     }
@@ -514,7 +595,10 @@ const estMinutes = Math.max(8, Math.round(requiredCount * 0.35));
       const id = fs.getAttribute("data-question-id");
       const n = form?.querySelectorAll(`input[name="q_${id}"]:checked`).length ?? 0;
       if (n > max) {
-        alert(`No puedes seleccionar más de ${max} opciones en una de las preguntas.`);
+        if (fs instanceof HTMLElement) {
+          setQuestionError(fs, `No puedes seleccionar más de ${max} opciones en esta pregunta.`);
+          focusQuestion(fs);
+        }
         return false;
       }
     }
