@@ -150,9 +150,8 @@ const study = {
   title:
     "Estudio sobre la situación de los docentes de Formación Profesional para el Empleo",
   summary:
-    "Primera oleada del Observatorio de la Formación Profesional para el Empleo. Encuesta anónima dirigida a docentes que imparten FPE en España.",
+    "Un estudio de la Formación Profesional para el Empleo para conocer la realidad profesional de quienes imparten FPE en España.",
 };
-
 for (const [ine, name, slug] of regions) {
   const { error } = await sb.from("regions").update({ name }).eq("ine_code", ine);
   if (error) throw error;
