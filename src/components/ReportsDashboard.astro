@@ -1,321 +1,105 @@
 ---
+import type { MetricId } from "@/services/analyticsTypes";
 import type { ReportsView } from "@/types";
-import ReportCard from "./ReportCard.astro";
 import ReportFilters from "./ReportFilters.astro";
+import ReportMetric from "./ReportMetric.astro";
+import ReportProfileComparison from "./ReportProfileComparison.astro";
 
-interface Props {
-  view: ReportsView;
-  filterAction: string;
-  compare?: string;
-}
-
-const { view, filterAction, compare = "" } = Astro.props;
+interface Props { view: ReportsView; filterAction: string; }
+const { view, filterAction } = Astro.props;
+const metrics = new Map(view.metrics.map((metric) => [metric.metricId, metric]));
+const metric = (id: MetricId) => metrics.get(id);
+const profileMetric = metric("profile_composition");
+const profiles = profileMetric && "options" in profileMetric ? profileMetric.options : [];
+const chapters: Array<{ id: string; number: string; title: string; intro: string; metrics: MetricId[]; tone?: "aspiring" }> = [
+  { id: "quienes-responden", number: "01", title: "Quiénes responden", intro: "La composición describe la muestra que ha participado; no representa por sí sola la distribución territorial o profesional del conjunto del sector.", metrics: ["profile_composition", "age_distribution", "gender_distribution", "education_distribution", "fpe_experience_distribution", "territorial_distribution", "main_family_distribution"] },
+  { id: "trabajo", number: "02", title: "Cómo se trabaja en la FPE", intro: "Entre docentes actuales que respondieron, estas medidas describen modalidad, relación laboral y peso de la FPE en su actividad.", metrics: ["teaching_mode_distribution", "employment_relation_distribution", "entity_type_distribution", "fpe_main_activity", "fpe_activity_share", "centres_per_year"] },
+  { id: "ingresos", number: "03", title: "Ingresos y dependencia económica", intro: "Los tramos de ingresos se muestran tal como fueron respondidos. No se convierten en un salario medio estimado.", metrics: ["annual_income_distribution", "income_dependency"] },
+  { id: "no-remunerado", number: "04", title: "El trabajo que no se paga", intro: "Las tareas podían seleccionarse conjuntamente; sus porcentajes no tienen por qué sumar 100 %.", metrics: ["unpaid_hours_distribution", "unpaid_tasks_ranking", "materials_burden"] },
+  { id: "estabilidad", number: "05", title: "Estabilidad y acceso al trabajo", intro: "Las respuestas muestran continuidad, previsibilidad y condiciones de acceso entre quienes participaron.", metrics: ["months_worked_distribution", "course_notice_distribution", "course_search_distribution", "work_availability_perception", "student_recruitment_difficulty"] },
+  { id: "percepcion", number: "06", title: "Cómo se percibe el sector", intro: "Las valoraciones expresan la percepción de la muestra; no establecen relaciones de causa y efecto.", metrics: ["salary_adequacy_perception", "professional_recognition", "sector_problems_ranking"] },
+  { id: "futuro", number: "07", title: "El futuro de la docencia FPE", intro: "Las expectativas recogen lo que declaran docentes y exdocentes que respondieron a la encuesta.", metrics: ["future_expectation_distribution"] },
+  { id: "aspirantes", number: "09", title: "Entrar en la FPE", intro: "Este capítulo reúne exclusivamente las respuestas de personas que se preparan o intentan acceder a la docencia FPE.", metrics: ["aspiring_family_interest", "aspiring_requirements_knowledge", "aspiring_teaching_qualification", "aspiring_sector_experience", "aspiring_job_search", "aspiring_access_barriers", "aspiring_preferred_mode", "aspiring_economic_perception", "aspiring_hourly_rate_distribution"], tone: "aspiring" },
+];
 ---
 
-<section class="space-y-14">
-  <header class="fade-up space-y-5">
-    <div class="inline-flex items-center gap-2 rounded-full bg-[var(--color-accent)]/10 px-4 py-2 text-sm font-medium text-[var(--color-accent)]">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-      </svg>
-      {view.filteredSessions} docentes han compartido su realidad
+<section class="radiography">
+  <header class="radiography__cover">
+    <p class="eyebrow">Estudio independiente · edición 2026</p>
+    <h1>Radiografía de la docencia en la Formación Profesional para el Empleo</h1>
+    <p class="radiography__lede">Una lectura de las respuestas de profesionales y aspirantes que han participado en la encuesta.</p>
+    <div class="radiography__sample">
+      <div><strong>{view.totalSessions}</strong><span>respuestas válidas</span></div>
+      <dl>
+        {profiles.map((profile) => <div><dt>{profile.label}</dt><dd>{profile.count}</dd></div>)}
+      </dl>
     </div>
-    <h1 class="font-display text-3xl text-[var(--color-brand-dark)] sm:text-4xl lg:text-6xl text-balance leading-tight">
-      ¿Qué dicen los profesionales de FPE?
-    </h1>
-    <p class="text-lg sm:text-xl text-[var(--color-ink-muted)] max-w-3xl">
-      Datos reales de docentes en activo. Descubre cómo es trabajar en Formación Profesional para el Empleo.
-    </p>
-    <div class="flex flex-wrap items-center gap-3 text-sm text-[var(--color-sage)]">
-      <span class="inline-flex items-center gap-1.5">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-        </svg>
-        Actualizado {view.waveLabel}
-      </span>
-      <span>·</span>
-      <a href="/metodologia" class="inline-flex items-center gap-1.5 underline-offset-2 hover:underline hover:text-[var(--color-brand)]">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
-        </svg>
-        Cómo trabajamos con los datos
-      </a>
-    </div>
+    <p class="radiography__method">Actualizado con la edición <strong>{view.waveLabel}</strong>. Los resultados describen la muestra obtenida y cada indicador informa de su base de respuestas válidas.</p>
   </header>
 
-  {/* Lo más destacado */}
-  {
-    view.insightHeadlines.length > 0 && (
-      <div class="relative overflow-hidden rounded-[var(--radius-lg)] bg-gradient-to-br from-[var(--color-accent)]/8 via-[var(--color-paper)] to-[var(--color-paper)] border-2 border-[var(--color-accent)]/20 p-8 sm:p-10">
-        <div class="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[var(--color-accent)]/10 blur-3xl" />
-        <div class="relative">
-          <div class="mb-6 inline-flex items-center gap-2 rounded-full bg-[var(--color-accent)] px-4 py-1.5 text-sm font-semibold text-white">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-            </svg>
-            Lo más destacado
-          </div>
-          <ul class="space-y-4">
-            {view.insightHeadlines.map((h, i) => (
-              <li class="flex items-start gap-4">
-                <span class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent)]/15 font-display text-sm font-bold text-[var(--color-accent)]">
-                  {i + 1}
-                </span>
-                <p class="text-lg sm:text-xl leading-relaxed text-[var(--color-ink)] font-medium">{h.text}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    )
-  }
+  <nav class="radiography__nav" aria-label="Capítulos de la radiografía">
+    <a href="#resumen">Resumen</a>
+    {chapters.map((chapter) => <a href={`#${chapter.id}`}>{chapter.number} · {chapter.title}</a>)}
+    <a href="#metodologia">Metodología</a>
+  </nav>
 
-  {/* Dashboard KPIs */}
-  <div>
-    <h2 class="mb-5 font-display text-2xl text-[var(--color-brand-dark)] sm:text-3xl">📊 Datos en un vistazo</h2>
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {
-        view.dashboardKpis.map((k) => (
-          <div class="group chapter !py-6 transition-all hover:scale-[1.02] hover:shadow-[var(--shadow-lift)]">
-            <p class="font-display text-5xl tabular-nums tracking-tight text-[var(--color-brand-dark)] group-hover:text-[var(--color-accent)]">
-              {k.suppressed ? "—" : k.value}
-            </p>
-            <p class="mt-3 text-base leading-snug text-[var(--color-ink)]">{k.label}</p>
-            {k.hint && !k.suppressed && (
-              <p class="mt-2 text-xs text-[var(--color-sage)] leading-relaxed">{k.hint}</p>
-            )}
-          </div>
-        ))
-      }
-    </div>
-  </div>
+  <ReportFilters view={view} action={filterAction} />
 
-
-
-  <ReportFilters view={view} action={filterAction} compare={compare} />
-
-  {/* Comparativa */}
-  {
-    view.segmentCompare && (
-      <div class="chapter space-y-6">
-        <div class="space-y-4">
-          <div class="flex items-start gap-3">
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent)]/15">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/>
-              </svg>
-            </div>
-            <div>
-              <h2 class="font-display text-2xl text-[var(--color-brand-dark)] sm:text-3xl">Comparando perfiles</h2>
-              <p class="mt-2 text-base text-[var(--color-ink-muted)] leading-relaxed">
-                Estás viendo datos lado a lado de dos grupos diferentes. Cada indicador muestra el valor promedio para cada grupo.
-              </p>
-            </div>
-          </div>
-          <div class="rounded-lg bg-[var(--color-accent)]/5 border-l-4 border-[var(--color-accent)] px-5 py-3 flex items-start gap-3">
-            <svg class="mt-0.5 shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/>
-            </svg>
-            <div>
-              <p class="text-base font-medium text-[var(--color-ink)]">
-                <strong>{view.segmentCompare.labelA}</strong> ({view.segmentCompare.nA} docentes) vs <strong>{view.segmentCompare.labelB}</strong> ({view.segmentCompare.nB} docentes)
-              </p>
-            </div>
-          </div>
-        </div>
-        {view.segmentCompare.suppressed ? (
-          <div class="rounded-lg bg-[var(--color-paper-deep)] px-5 py-4 flex items-start gap-3">
-            <svg class="mt-0.5 shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-danger)" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-            <div>
-              <p class="font-medium text-[var(--color-ink)]">No hay suficientes respuestas</p>
-              <p class="mt-1 text-sm text-[var(--color-ink-muted)]">
-                Necesitamos al menos {view.minN} respuestas en cada grupo para mostrar comparaciones fiables. Prueba con filtros más amplios o espera a tener más participación.
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
-              <thead>
-                <tr class="border-b border-[var(--color-line)] text-[var(--color-ink-muted)]">
-                  <th class="py-2.5 pr-4 font-medium">Indicador</th>
-                  <th class="py-2.5 pr-4 font-medium">{view.segmentCompare.labelA}</th>
-                  <th class="py-2.5 font-medium">{view.segmentCompare.labelB}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {view.segmentCompare.metrics.map((m) => (
-                  <tr class="border-b border-[var(--color-line)]/50">
-                    <td class="py-3 pr-4">{m.label}</td>
-                    <td class="py-3 pr-4 tabular-nums font-medium text-[var(--color-brand-dark)]">
-                      {m.valueA}
-                    </td>
-                    <td class="py-3 tabular-nums font-medium text-[var(--color-brand-dark)]">
-                      {m.valueB}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  {/* Índices de clima */}
-  {
-    view.indices.length > 0 && (
-      <div>
-        <h2 class="mb-5 font-display text-2xl text-[var(--color-brand-dark)] sm:text-3xl">🌡️ Temperatura del sector</h2>
-        <div class="grid gap-4 sm:grid-cols-2">
-          {view.indices.map((idx) => (
-            <div class="chapter relative overflow-hidden">
-              <p class="eyebrow">{idx.name}</p>
-              {idx.suppressed ? (
-                <p class="mt-4 text-sm text-[var(--color-ink-muted)]">Pocas respuestas para calcular</p>
-              ) : (
-                <>
-                  <p class="mt-5 font-display text-6xl tabular-nums text-[var(--color-brand-dark)]">
-                    {idx.mean}
-                    <span class="text-2xl text-[var(--color-ink-muted)]">/100</span>
-                  </p>
-                  {idx.band && (
-                    <p class="mt-3">
-                      <span class="inline-flex items-center gap-2 rounded-full bg-[var(--color-accent)]/15 px-4 py-1.5 text-sm font-semibold text-[var(--color-accent)]">{idx.band}</span>
-                    </p>
-                  )}
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  <div class="space-y-4">
-    <h2 class="font-display text-2xl text-[var(--color-brand-dark)] sm:text-3xl">📑 Informes detallados</h2>
-    <p class="text-base text-[var(--color-ink-muted)] max-w-2xl">Explora cada tema en profundidad. Cada informe analiza un aspecto concreto de la vida profesional en FPE.</p>
-    <nav class="flex flex-wrap gap-3">
-      {
-        view.reports.map((r) => (
-          <a href={`#${r.slug}`} class="inline-flex items-center gap-2 rounded-full border-2 border-[var(--color-line)] bg-[var(--color-surface)] px-4 py-2.5 text-sm font-medium text-[var(--color-ink)] transition-all hover:border-[var(--color-brand)] hover:bg-[var(--color-brand)] hover:text-white hover:shadow-md">
-            {r.title}
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </a>
-        ))
-      }
-    </nav>
-  </div>
-
-  {
-    view.filteredSessions < view.minN ? (
-      <div class="chapter space-y-3">
-        <div class="flex items-start gap-3">
-          <svg class="mt-0.5 shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
-          </svg>
-          <div>
-            <p class="font-medium text-[var(--color-ink)]">Necesitamos más respuestas</p>
-            <p class="mt-1 text-sm text-[var(--color-ink-muted)]">
-              Este filtro tiene solo {view.filteredSessions} respuestas. Para mostrar datos fiables, necesitamos al menos {view.minN}. Prueba a ampliar los filtros o comparte la encuesta para conseguir más participación.
-            </p>
-          </div>
-        </div>
-      </div>
+  <section id="resumen" class="radiography__summary" aria-labelledby="summary-title">
+    <div><p class="eyebrow">Lectura inicial</p><h2 id="summary-title">Principales resultados</h2></div>
+    {view.insightHeadlines.length ? (
+      <ol>{view.insightHeadlines.slice(0, 8).map((headline) => <li><span>{headline.text}</span><small>n={headline.n}</small></li>)}</ol>
     ) : (
-      view.reports.map((report) => <ReportCard report={report} minN={view.minN} />)
-    )
-  }
+      <p class="radiography__empty">Aún no hay suficiente base para destacar resultados de forma responsable.</p>
+    )}
+  </section>
 
-  {/* Banner compartir */}
-  <div class="rounded-[var(--radius-lg)] border border-[var(--color-line)] bg-[var(--color-surface)] p-6 sm:p-8 shadow-sm">
-    <div class="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-      <div class="space-y-3">
-        <div class="flex items-center gap-2">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2">
-            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
-          </svg>
-          <p class="text-lg font-display font-semibold text-[var(--color-brand-dark)]">Comparte estos datos</p>
-        </div>
-        <p class="text-sm text-[var(--color-ink-muted)] leading-relaxed max-w-md">
-          Ayúdanos a dar visibilidad a la realidad del sector. Cuantos más profesionales participen, más representativos serán los resultados.
-        </p>
+  {chapters.map((chapter) => (
+    <section id={chapter.id} class:list={["report-chapter", { "report-chapter--aspiring": chapter.tone === "aspiring" }]} aria-labelledby={`${chapter.id}-title`}>
+      <header class="report-chapter__intro"><p>{chapter.number}</p><div><h2 id={`${chapter.id}-title`}>{chapter.title}</h2><p>{chapter.intro}</p></div></header>
+      <div class="report-chapter__grid">
+        {chapter.metrics.map((id, index) => <ReportMetric metric={metric(id)} featured={index < 2} />)}
       </div>
-      <div class="flex flex-col gap-3 sm:min-w-[200px]">
-        <button
-          id="share-btn"
-          class="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-[var(--color-brand)] bg-[var(--color-brand)] px-4 py-2.5 text-sm font-semibold text-white transition-all hover:shadow-md active:scale-95"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
-          </svg>
-          Compartir
-        </button>
-        <div class="flex gap-2">
-          <a
-            href={`https://twitter.com/intent/tweet?text=${encodeURIComponent('¿Cómo es trabajar en FPE? Datos reales de docentes →')}&url=${encodeURIComponent(Astro.url.href)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] text-[var(--color-ink-muted)] transition-all hover:border-[var(--color-brand)] hover:text-[var(--color-brand)] hover:shadow-sm"
-            title="Compartir en X/Twitter"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-            </svg>
-          </a>
-          <a
-            href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(Astro.url.href)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] text-[var(--color-ink-muted)] transition-all hover:border-[var(--color-brand)] hover:text-[var(--color-brand)] hover:shadow-sm"
-            title="Compartir en LinkedIn"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-            </svg>
-          </a>
-          <a
-            href={`https://wa.me/?text=${encodeURIComponent('¿Cómo es trabajar en FPE? Datos reales → ' + Astro.url.href)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] text-[var(--color-ink-muted)] transition-all hover:border-[var(--color-brand)] hover:text-[var(--color-brand)] hover:shadow-sm"
-            title="Compartir en WhatsApp"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-            </svg>
-          </a>
-        </div>
-      </div>
+    </section>
+  ))}
+
+  <section id="docentes-exdocentes" class="report-chapter report-chapter--pending" aria-labelledby="compare-title">
+    <header class="report-chapter__intro"><p>08</p><div><h2 id="compare-title">Docentes actuales y exdocentes</h2><p>La comparativa se publicará únicamente para indicadores y grupos que alcancen una base suficiente en ambos perfiles.</p></div></header>
+    <div class="report-chapter__grid">{view.profileComparisons.map((comparison) => <ReportProfileComparison comparison={comparison} />)}</div>
+  </section>
+
+  <section id="metodologia" class="radiography__methodology" aria-labelledby="method-title">
+    <p class="eyebrow">Cómo leer los datos</p>
+    <h2 id="method-title">Metodología</h2>
+    <div>
+      <p>La encuesta es independiente y recoge respuestas anónimas de docentes actuales, exdocentes y aspirantes a la docencia FPE. No se solicitan datos identificativos en el cuestionario.</p>
+      <p>El denominador cambia según la pregunta: cada resultado muestra sus respuestas válidas y la población a la que correspondía. En preguntas de selección múltiple, una misma persona puede figurar en varias opciones.</p>
+      <p>Los desgloses con muestra insuficiente no se publican y las bases reducidas se señalan. Los resultados describen la muestra obtenida; las diferencias observadas no prueban causalidad ni equivalen a una estimación nacional.</p>
     </div>
-  </div>
+  </section>
 </section>
 
-<script>
-  document.getElementById('share-btn')?.addEventListener('click', () => {
-    const url = window.location.href;
-    const text = '¿Cómo es trabajar en FPE? Echa un vistazo a estos datos →';
-    
-    if (navigator.share) {
-      navigator.share({ title: 'Observatorio FPE', text: text, url: url }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(url).then(() => {
-        const btn = document.getElementById('share-btn');
-        if (!btn) return;
-        const orig = btn.innerHTML;
-        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> ¡Copiado!';
-        btn.classList.add('!bg-[var(--color-ok)]', '!border-[var(--color-ok)]');
-        setTimeout(() => {
-          btn.innerHTML = orig;
-          btn.classList.remove('!bg-[var(--color-ok)]', '!border-[var(--color-ok)]');
-        }, 2500);
-      });
-    }
-  });
-</script>
+<style>
+  .radiography { display: grid; gap: clamp(2.5rem, 6vw, 5rem); }
+  .radiography__cover { max-width: 58rem; padding: clamp(1.5rem, 5vw, 3.5rem); border: 1px solid var(--color-line); border-radius: var(--radius-lg); background: linear-gradient(135deg, rgb(74 92 60 / .11), var(--color-surface) 58%); }
+  .radiography__cover h1 { max-width: 18ch; margin: .65rem 0 1rem; font-size: clamp(2.25rem, 7vw, 4.6rem); line-height: 1.02; }
+  .radiography__lede { max-width: 42rem; margin: 0; color: var(--color-ink-muted); font-size: clamp(1.05rem, 2.4vw, 1.25rem); }
+  .radiography__sample { display: grid; gap: 1.25rem; margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--color-line-strong); }
+  .radiography__sample > div strong { display: block; color: var(--color-brand-dark); font-family: var(--font-display); font-size: clamp(3rem, 8vw, 5.25rem); line-height: .9; }
+  .radiography__sample > div span { color: var(--color-ink-muted); font-size: .9rem; }
+  .radiography__sample dl { display: grid; gap: .55rem; margin: 0; }
+  .radiography__sample dl div { display: flex; justify-content: space-between; gap: 1rem; padding-bottom: .45rem; border-bottom: 1px solid rgb(205 215 200 / .7); }
+  .radiography__sample dt { color: var(--color-ink-muted); } .radiography__sample dd { margin: 0; font-weight: 700; }
+  .radiography__method { margin: 1.25rem 0 0; color: var(--color-ink-muted); font-size: .85rem; }
+  .radiography__nav { display: flex; gap: .5rem 1rem; overflow-x: auto; padding-bottom: .4rem; border-bottom: 1px solid var(--color-line); white-space: nowrap; scrollbar-width: thin; }
+  .radiography__nav a { color: var(--color-ink-muted); font-size: .85rem; text-decoration: none; } .radiography__nav a:hover { color: var(--color-brand-dark); text-decoration: underline; }
+  .radiography__summary { display: grid; gap: 1.25rem; padding: clamp(1.25rem, 4vw, 2.25rem); border-radius: var(--radius-lg); background: var(--color-brand-dark); color: #f7faf4; }
+  .radiography__summary h2 { margin: .35rem 0 0; color: inherit; font-size: clamp(1.7rem, 5vw, 2.5rem); } .radiography__summary .eyebrow { color: #c6d7bd; }
+  .radiography__summary ol { display: grid; gap: .75rem; margin: 0; padding: 0; list-style: none; } .radiography__summary li { display: flex; justify-content: space-between; gap: 1rem; padding: .75rem 0; border-bottom: 1px solid rgb(255 255 255 / .16); } .radiography__summary small { flex: 0 0 auto; color: #dce8d6; }
+  .report-chapter { scroll-margin-top: 5.5rem; } .report-chapter__intro { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); gap: .75rem; margin-bottom: 1.25rem; } .report-chapter__intro > p { margin: .25rem 0 0; color: var(--color-sage); font-size: .8rem; font-weight: 700; letter-spacing: .08em; } .report-chapter__intro h2 { margin: 0; font-size: clamp(1.8rem, 5vw, 3rem); } .report-chapter__intro div > p { max-width: 48rem; margin: .65rem 0 0; color: var(--color-ink-muted); }
+  .report-chapter__grid { display: grid; gap: .85rem; } .report-chapter--aspiring { padding: clamp(1rem, 3vw, 2rem); border-radius: var(--radius-lg); background: rgb(74 92 60 / .055); } .report-chapter--pending { border-top: 1px solid var(--color-line); padding-top: 2rem; }
+  .radiography__methodology { scroll-margin-top: 5.5rem; padding-top: 2rem; border-top: 1px solid var(--color-line-strong); } .radiography__methodology h2 { margin: .5rem 0 1rem; font-size: clamp(1.8rem, 5vw, 2.8rem); } .radiography__methodology div { display: grid; gap: .75rem; max-width: 56rem; color: var(--color-ink-muted); } .radiography__methodology p { margin: 0; }
+  .radiography__empty { margin: 0; color: var(--color-ink-muted); }
+  @media (min-width: 640px) { .radiography__sample { grid-template-columns: minmax(11rem, .8fr) minmax(16rem, 1fr); align-items: end; } .report-chapter__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .report-chapter__grid :global(.report-metric--featured) { grid-column: span 2; } }
+  @media (min-width: 1024px) { .report-chapter__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .report-chapter__grid :global(.report-metric--featured) { grid-column: span 1; } .radiography__summary { grid-template-columns: minmax(14rem, .7fr) 1.3fr; align-items: start; } }
+</style>

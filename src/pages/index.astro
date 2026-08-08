@@ -104,7 +104,7 @@ try {
 
         <figure class="hero__visual">
           <div class="hero__image-wrap">
-            <span class="hero__index" aria-hidden="true">01</span>
+
 
             <img
               src="/encuestas.png"
@@ -175,39 +175,39 @@ try {
     ========================================================== -->
     <section class="why">
       <div class="page-shell why__grid">
+<div class="why__statement">
+  <h2>
+    ¿Cuáles son realmente las condiciones de los docentes de FPE?
+    <span>
+      La docencia en Formación Profesional para el Empleo sigue siendo una realidad poco conocida.
+    </span>
+  </h2>
+</div>
 
-        <div class="why__label">
-          <p class="section-number">02 · El punto de partida</p>
-        </div>
+<div class="why__copy">
+  <p>
+    La Formación Profesional para el Empleo cuenta con normativa, programas,
+    certificados, requisitos docentes y sistemas de evaluación muy definidos.
+    Sin embargo, sabemos mucho menos sobre las condiciones de las personas que
+    hacen posible esa formación cada día.
+  </p>
 
-        <div class="why__statement">
-          <h2>
-            Sabemos mucho sobre lo que debe impartirse.
-            <span>
-              Sabemos bastante menos sobre las condiciones en las que se enseña.
-            </span>
-          </h2>
-        </div>
+  <p>
+    Muchos docentes trabajan para distintos centros a lo largo del año, enlazan
+    cursos, cambian de entidad y desarrollan su actividad en condiciones muy
+    diferentes. Esta dispersión dificulta la creación de un sentimiento de
+    colectivo y hace que gran parte de su realidad profesional permanezca poco
+    visible.
+  </p>
 
-        <div class="why__copy">
-          <p>
-            La Formación Profesional para el Empleo cuenta con normativa,
-            programas, certificados, requisitos docentes y sistemas de
-            evaluación muy definidos.
-          </p>
+  <p class="why__emphasis">
+    Cuando estas experiencias se viven de forma aislada, pueden parecer casos
+    individuales. Al ponerlas en común, se convierten en datos capaces de
+    mostrar la realidad colectiva de la docencia FPE.
+  </p>
+</div>
 
-          <p>
-            Sin embargo, existe mucha menos información accesible sobre la
-            realidad cotidiana de sus docentes: cuánto trabajan, cómo son
-            contratados, qué retribuciones reciben, cuánto tiempo dedican fuera
-            del aula o cómo valoran sus condiciones profesionales.
-          </p>
 
-          <p class="why__emphasis">
-            Este estudio nace para convertir esas experiencias individuales
-            en datos que puedan observarse de forma colectiva.
-          </p>
-        </div>
 
       </div>
     </section>
@@ -281,7 +281,7 @@ try {
           <p class="section-number">04 · Qué queremos conocer</p>
 
           <h2>
-            Más allá de impartir horas.
+           Más allá de las condiciones económicas.
           </h2>
 
           <p>
@@ -422,18 +422,11 @@ try {
           <div>
             <p class="section-number">Participa</p>
 
-            <h2>
-              Una respuesta más
-              <span>también cambia la fotografía.</span>
-            </h2>
+           <h2>  <span>Cuantas más respuestas sinceras, más fiel será la realidad que podamos mostrar.</span> </h2>
           </div>
 
           <div class="closing__action">
-            <p>
-              Si trabajas como docente de Formación Profesional para el Empleo,
-              tu experiencia puede ayudar a construir una imagen más precisa
-              del sector.
-            </p>
+            <p> Si eres docente de FPE, has trabajado en el sector o estás intentando acceder a la docencia, tu experiencia puede ayudarnos a comprender mejor cómo se vive esta profesión y qué aspectos necesitan mejorar. </p>
 
             <a
               href="/estudios/docentes-fpe-2026/participar"
@@ -483,7 +476,7 @@ try {
 
   .hero {
     position: relative;
-    padding: clamp(64px, 8vw, 112px) 0 clamp(72px, 9vw, 128px);
+    padding: clamp(56px, 7vw, 96px) 0 clamp(64px, 8vw, 104px);
   }
 
   .hero::after {
@@ -743,16 +736,16 @@ try {
   ========================================================== */
 
   .stats-section {
-    padding: clamp(72px, 9vw, 120px) 0;
+    padding: clamp(60px, 7vw, 96px) 0;
   }
 
   .section-heading {
     max-width: 720px;
-    margin-bottom: 56px;
+    margin-bottom: 40px;
   }
 
   .section-heading--compact {
-    margin-bottom: 44px;
+    margin-bottom: 32px;
   }
 
   .section-heading h2 {
@@ -833,7 +826,7 @@ try {
   ========================================================== */
 
   .why {
-    padding: clamp(80px, 10vw, 140px) 0;
+    padding: clamp(64px, 8vw, 104px) 0;
 
     background: var(--color-brand-dark);
     color: white;
@@ -841,8 +834,8 @@ try {
 
   .why__grid {
     display: grid;
-    grid-template-columns: 0.55fr 1.7fr 1fr;
-    gap: clamp(34px, 5vw, 76px);
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: clamp(32px, 5vw, 72px);
   }
 
   .why .section-number {
@@ -859,6 +852,11 @@ try {
     letter-spacing: -0.038em;
   }
 
+  .why__statement {
+    align-self: center;
+    transform: translateY(-12px);
+  }
+
   .why__statement h2 span {
     display: block;
     margin-top: 14px;
@@ -871,7 +869,7 @@ try {
   }
 
   .why__copy p {
-    margin: 0 0 22px;
+    margin: 0 0 18px;
 
     font-size: 0.9rem;
     line-height: 1.72;
@@ -880,8 +878,8 @@ try {
   }
 
   .why__copy .why__emphasis {
-    margin-top: 35px;
-    padding-top: 20px;
+    margin-top: 28px;
+    padding-top: 18px;
 
     border-top: 1px solid rgba(255, 255, 255, 0.22);
 
@@ -895,7 +893,7 @@ try {
   ========================================================== */
 
   .honesty {
-    padding: clamp(88px, 10vw, 140px) 0;
+    padding: clamp(64px, 8vw, 104px) 0;
     background: #f6f7f2;
   }
 
@@ -960,7 +958,7 @@ try {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0 42px;
 
-    margin-top: 45px;
+    margin-top: 32px;
 
     border-top: 1px solid var(--color-line);
   }
@@ -992,7 +990,7 @@ try {
     justify-content: space-between;
     gap: 10px 30px;
 
-    margin-top: 48px;
+    margin-top: 36px;
     padding: 22px 0;
 
     border-top: 1px solid var(--color-ink);
@@ -1018,7 +1016,7 @@ try {
   ========================================================== */
 
   .topics {
-    padding: clamp(90px, 11vw, 150px) 0;
+    padding: clamp(68px, 8vw, 110px) 0;
   }
 
   .topics__list {
@@ -1071,7 +1069,7 @@ try {
   ========================================================== */
 
   .method {
-    padding: clamp(86px, 10vw, 140px) 0;
+    padding: clamp(64px, 8vw, 104px) 0;
 
     background: color-mix(
       in srgb,
@@ -1152,7 +1150,7 @@ try {
   ========================================================== */
 
   .closing {
-    padding: clamp(90px, 10vw, 140px) 0;
+    padding: clamp(68px, 8vw, 104px) 0;
   }
 
   .closing__inner {
@@ -1362,6 +1360,10 @@ try {
 
     .why__statement h2 {
       font-size: 2.6rem;
+    }
+
+    .why__statement {
+      transform: none;
     }
 
 

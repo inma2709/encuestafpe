@@ -47,18 +47,35 @@ try {
           </p>
         </div>
 
-        <div class="flex flex-col gap-3 sm:flex-row">
-          <a
-            href={`/estudios/${survey.study.slug}/participar`}
-            class="btn btn-primary btn-full sm:w-auto"
-          >
-            {survey.study.status === "open" ? "Participar ahora" : "Ver encuesta"}
-            <Icon name="arrow-right" size={18} />
-          </a>
+        <div class="space-y-4">
+          <aside class="callout space-y-3 text-sm leading-relaxed text-[var(--color-ink-muted)]" aria-label="Información antes de comenzar la encuesta">
+            <p class="font-medium text-[var(--color-ink)]">
+              La encuesta solo puede completarse una vez por dispositivo, para evitar respuestas duplicadas y proteger la fiabilidad de los resultados.
+            </p>
+            <p>No es necesario registrarse ni facilitar datos personales.</p>
+            <p><strong>Al completar y enviar la encuesta, se contabilizará tu participación.</strong></p>
+          </aside>
+
+          <div class="flex flex-col gap-3 sm:flex-row">
+            <div class="flex flex-col gap-2">
+              <a
+                href={`/estudios/${survey.study.slug}/participar`}
+                class="btn btn-primary btn-full sm:w-auto"
+              >
+                {survey.study.status === "open" ? "Comenzar encuesta" : "Ver encuesta"}
+                <Icon name="arrow-right" size={18} />
+              </a>
+              {survey.study.status === "open" && (
+                <p class="text-center text-xs text-[var(--color-ink-muted)] sm:text-left">
+                  Al completarla, se contabilizará tu participación.
+                </p>
+              )}
+            </div>
           <a href="/informes" class="btn btn-ghost btn-full sm:w-auto">
             <Icon name="chart-bar" size={18} />
             Ver informes
           </a>
+          </div>
         </div>
       </article>
     )

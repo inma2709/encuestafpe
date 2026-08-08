@@ -20,7 +20,7 @@ function isCurrent(href: string) {
 }
 ---
 
-<header class="site-header">
+<header class="site-header" data-site-header>
   <div class="shell-wide flex items-center justify-between gap-4 py-4 sm:py-5">
     <a href="/" class="group block min-w-0 no-underline" aria-label="Observatorio FPE — inicio">
       <span class="font-display text-[1.15rem] leading-none tracking-tight text-[var(--color-brand-dark)] sm:text-xl">
@@ -70,6 +70,13 @@ function isCurrent(href: string) {
 </header>
 
 <script>
+  const header = document.querySelector('[data-site-header]');
+  if (header instanceof HTMLElement) {
+    const setHeaderHeight = () => document.documentElement.style.setProperty('--site-header-height', `${header.offsetHeight}px`);
+    new ResizeObserver(setHeaderHeight).observe(header);
+    setHeaderHeight();
+  }
+
   // Close mobile menu when clicking a link
   document.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;

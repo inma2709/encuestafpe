@@ -1,697 +1,118 @@
 ---
 import type { SurveyQuestion } from "@/types";
 
-interface Props {
-  questions: SurveyQuestion[];
-  studySlug: string;
-  errorMessage?: string;
-}
-
+interface Props { questions: SurveyQuestion[]; studySlug: string; errorMessage?: string; }
 const { questions, studySlug, errorMessage } = Astro.props;
-
 const ccaaQuestion = questions.find((q) => q.code === "demo_ccaa");
 const familiesQuestion = questions.find((q) => q.code === "demo_families");
 const familyQuestion = questions.find((q) => q.code === "demo_family");
 const missingProblemQuestion = questions.find((q) => q.code === "sector_missing_problem");
 const openCommentQuestion = questions.find((q) => q.code === "open_comment");
 const respondentTypeQuestion = questions.find((q) => q.code === "respondent_type");
-
-const requiredCount = questions.filter((q) => q.required).length;
-const estMinutes = Math.max(8, Math.round(requiredCount * 0.35));
 ---
 
-{
-  errorMessage && (
-    <div
-      class="mb-8 rounded-[var(--radius-md)] border border-[var(--color-danger)]/25 bg-[rgb(143_61_53/0.06)] px-4 py-4 text-sm text-[var(--color-danger)]"
-      role="alert"
-    >
-      {errorMessage}
-    </div>
-  )
-}
+{errorMessage && <div class="mb-8 rounded-[var(--radius-md)] border border-[var(--color-danger)]/25 bg-[rgb(143_61_53/0.06)] px-4 py-4 text-sm text-[var(--color-danger)]" role="alert">{errorMessage}</div>}
 
-<div
-  id="survey-progress"
-  class="sticky top-[4.25rem] z-30 -mx-0.5 mb-6 rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[rgb(255_252_247/0.95)] px-3 py-3 shadow-[var(--shadow-soft)] backdrop-blur-md sm:top-[4.75rem] sm:-mx-1 sm:mb-8 sm:px-4 sm:py-3.5"
->
+<div id="survey-progress" class="mb-6 rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[rgb(255_252_247/0.95)] px-3 py-3 shadow-[var(--shadow-soft)] backdrop-blur-md sm:mb-8 sm:px-4 sm:py-3.5" aria-live="polite">
   <div class="mb-2.5 flex items-baseline justify-between gap-2 text-sm sm:mb-3 sm:gap-3">
-    <div class="flex flex-col gap-0.5">
-      <p class="font-medium text-[var(--color-ink)]">
-        <span id="progress-label">0%</span>
-        <span class="font-normal text-[var(--color-ink-muted)]"> completado</span>
-      </p>
-      <p class="text-xs text-[var(--color-ink-muted)]" id="progress-count">
-        Pregunta <span id="current-q">0</span> de <span id="total-q">0</span>
-      </p>
-    </div>
-    <p class="text-xs text-[var(--color-ink-muted)] sm:text-sm" id="progress-eta">
-      ≈ {estMinutes} min
-    </p>
+    <div class="flex flex-col gap-0.5"><p class="font-medium text-[var(--color-ink)]" id="progress-label">Pregunta 1 de 1</p><p class="text-xs text-[var(--color-ink-muted)]" id="progress-count">0 de 1 completadas · 0 %</p></div>
+    <p class="text-xs text-[var(--color-ink-muted)] sm:text-sm" id="progress-eta">≈ — min</p>
   </div>
-  <div class="progress-rail" aria-hidden="true">
-    <span id="progress-bar" style="width: 0%"></span>
-  </div>
+  <div class="progress-rail" aria-hidden="true"><span id="progress-bar" style="width: 0%"></span></div>
 </div>
 
-<form method="POST" novalidate class="space-y-5 sm:space-y-7 lg:space-y-9" id="survey-form" data-est-minutes={estMinutes}>
+<form method="POST" novalidate class="space-y-5 sm:space-y-7" id="survey-form">
   <input type="hidden" name="studySlug" value={studySlug} />
-  <div class="absolute -left-[9999px]" aria-hidden="true">
-    <label>
-      Website
-      <input type="text" name="website" tabindex="-1" autocomplete="off" />
-    </label>
-  </div>
+  <div class="absolute -left-[9999px]" aria-hidden="true"><label>Website<input type="text" name="website" tabindex="-1" autocomplete="off" /></label></div>
   <input type="hidden" name="durationMs" id="durationMs" value="0" />
 
-  {
-    questions.map((q, index) => (
-      <fieldset
-        class:list={[
-          "chapter",
-          q.code !== "respondent_type" && "hidden",
-        ]}
-        style={`animation-delay: ${Math.min(index * 18, 180)}ms`}
-        data-question-code={q.code}
-        data-question-id={q.id}
-        data-required={q.required ? "1" : "0"}
-        data-audience={q.audience === "all" ? "all" : q.audience.join(",")}
-        data-max-selections={q.maxValue ?? undefined}
-        data-conditional={q.code === "open_comment" ? "open_comment" : undefined}
-      >
-        <legend class="w-full px-0">
-          <span class="mb-2 block text-[0.65rem] font-semibold tracking-[0.12em] text-[var(--color-sage)] uppercase opacity-60">
-            {String(index + 1).padStart(2, "0")}
-            {q.required ? "" : " · opcional"}
-          </span>
-          <span class="block font-display text-[1.1rem] leading-[1.3] text-[var(--color-brand-dark)] break-words sm:text-xl sm:leading-snug">
-            {q.label}
-            {q.required && <span class="text-[var(--color-brand-soft)]"> *</span>}
-          </span>
-        </legend>
-        <p class="locked-message" role="status" aria-live="polite">
-          Completa la pregunta obligatoria anterior para desbloquear esta.
-        </p>
-        <p class="validation-message" data-validation-message role="alert" aria-live="polite"></p>
-        {q.helpText && (
-          <p class="mt-3 text-[0.875rem] leading-relaxed text-[var(--color-ink-muted)] break-words">{q.helpText}</p>
-        )}
-        {[
-          "sector_hard_to_find_work",
-          "sector_salaries_adequate",
-          "sector_recognition",
-        ].includes(q.code) && (
-          <p class="mt-3 rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-paper)] px-3 py-2 text-sm leading-relaxed text-[var(--color-ink)]">
-            <strong>Cómo responder:</strong> 1 significa «Totalmente en desacuerdo», 3 «Ni de acuerdo ni en desacuerdo» y 5 «Totalmente de acuerdo».
-          </p>
-        )}
+  {questions.map((q) => (
+    <fieldset class="chapter" hidden data-question-code={q.code} data-question-id={q.id} data-required={q.required ? "1" : "0"} data-audience={q.audience === "all" ? "all" : q.audience.join(",")} data-max-selections={q.maxValue ?? undefined} data-conditional={q.code === "open_comment" ? "open_comment" : undefined}>
+      <legend class="w-full px-0">
+        <span class="mb-2 block text-[0.7rem] font-semibold tracking-[0.12em] text-[var(--color-sage)] uppercase" data-step-number>Pregunta</span>
+        <span class="block font-display text-[1.1rem] leading-[1.3] text-[var(--color-brand-dark)] break-words sm:text-xl sm:leading-snug">{q.label}{q.required && <span class="text-[var(--color-brand-soft)]"> *</span>}</span>
+      </legend>
+      <p class="validation-message" data-validation-message role="alert" aria-live="polite"></p>
+      {q.helpText && <p class="mt-3 text-[0.875rem] leading-relaxed text-[var(--color-ink-muted)] break-words">{q.helpText}</p>}
+      {["sector_hard_to_find_work", "sector_salaries_adequate", "sector_recognition"].includes(q.code) && <p class="mt-3 rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-paper)] px-3 py-2 text-sm leading-relaxed text-[var(--color-ink)]"><strong>Cómo responder:</strong> 1 significa «Totalmente en desacuerdo», 3 «Ni de acuerdo ni en desacuerdo» y 5 «Totalmente de acuerdo».</p>}
+      {(q.display === "radio" || q.display === "likert") && <div class:list={["mt-5 gap-2.5", q.display === "likert" ? "flex flex-wrap" : "flex flex-col"]}>{q.options.map((opt) => <label class:list={["option", q.display === "likert" && "option-likert"]}><input class="option-input" type="radio" name={`q_${q.id}`} value={opt.id} data-region-id={opt.regionId ?? undefined} data-option-code={opt.code} required={q.required} /><span class="option-mark" aria-hidden="true" /><span class:list={["text-[0.975rem] leading-snug", q.display === "likert" && "text-base font-semibold"]}>{opt.label}</span></label>)}</div>}
+      {q.display === "checkbox" && <div class="mt-5 flex flex-col gap-2.5" data-multi-group={q.id}><p class="text-sm text-[var(--color-ink-muted)]">Puedes seleccionar varias opciones.</p>{q.options.map((opt) => <label class="option"><input class="option-input multi-option" type="checkbox" name={`q_${q.id}`} value={opt.id} data-option-code={opt.code} /><span class="option-mark" aria-hidden="true" /><span class="text-[0.975rem] leading-snug">{opt.label}</span></label>)}{q.maxValue != null && <p class="mt-1 text-xs text-[var(--color-ink-muted)]" data-multi-hint={q.id}>Máximo {q.maxValue} opciones.</p>}</div>}
+      {q.display === "select" && <select name={`q_${q.id}`} id={`select_${q.id}`} required={q.required} data-cascade={q.code === "demo_province" ? "province" : undefined} data-family-principal={q.code === "demo_family" ? "1" : undefined} class="field mt-5"><option value="">Selecciona una opción…</option>{q.options.map((opt) => <option value={opt.id} data-region-id={opt.regionId ?? ""} data-option-code={opt.code}>{opt.label}</option>)}</select>}
+      {q.display === "text" && <textarea name={`q_${q.id}`} id={`text_${q.id}`} required={q.required} maxlength={1000} rows={4} class="field mt-5 min-h-[8rem]" placeholder="Escribe aquí…" />}
+      {q.display === "number" && <><input type="number" inputmode="decimal" step="0.01" name={`q_${q.id}`} required={q.required} min={q.minValue ?? undefined} max={q.maxValue ?? undefined} class="field mt-5 max-w-[12rem]" /><p class="mt-2 text-xs text-[var(--color-ink-muted)]">Indica una cantidad en euros; puedes usar decimales.</p></>}
+    </fieldset>
+  ))}
 
-        {(q.display === "radio" || q.display === "likert") && (
-          <div
-            class:list={[
-              "mt-5 gap-2.5",
-              q.display === "likert" ? "flex flex-wrap" : "flex flex-col",
-            ]}
-          >
-            {q.options.map((opt) => (
-              <label class:list={["option", q.display === "likert" && "option-likert"]}>
-                <input
-                  class="option-input"
-                  type="radio"
-                  name={`q_${q.id}`}
-                  value={opt.id}
-                  data-region-id={opt.regionId ?? undefined}
-                  data-option-code={opt.code}
-                  required={q.required}
-                />
-                <span class="option-mark" aria-hidden="true" />
-                <span class:list={["text-[0.975rem] leading-snug", q.display === "likert" && "text-base font-semibold"]}>
-                  {opt.label}
-                </span>
-              </label>
-            ))}
-          </div>
-        )}
-
-        {q.display === "checkbox" && (
-          <div class="mt-5 flex flex-col gap-2.5" data-multi-group={q.id}>
-            {q.options.map((opt) => (
-              <label class="option">
-                <input
-                  class="option-input multi-option"
-                  type="checkbox"
-                  name={`q_${q.id}`}
-                  value={opt.id}
-                  data-option-code={opt.code}
-                />
-                <span class="option-mark" aria-hidden="true" />
-                <span class="text-[0.975rem] leading-snug">{opt.label}</span>
-              </label>
-            ))}
-            {q.maxValue != null && (
-              <p class="mt-1 text-xs text-[var(--color-ink-muted)]" data-multi-hint={q.id}>
-                Máximo {q.maxValue} opciones.
-              </p>
-            )}
-          </div>
-        )}
-
-        {q.display === "select" && (
-          <select
-            name={`q_${q.id}`}
-            id={`select_${q.id}`}
-            required={q.required}
-            data-cascade={q.code === "demo_province" ? "province" : undefined}
-            data-family-principal={q.code === "demo_family" ? "1" : undefined}
-            class="field mt-5"
-          >
-            <option value="">Selecciona una opción…</option>
-            {q.options.map((opt) => (
-              <option
-                value={opt.id}
-                data-region-id={opt.regionId ?? ""}
-                data-option-code={opt.code}
-              >
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        )}
-
-        {q.display === "text" && (
-          <textarea
-            name={`q_${q.id}`}
-            id={`text_${q.id}`}
-            required={q.required}
-            maxlength={1000}
-            rows={4}
-            class="field mt-5 min-h-[8rem]"
-            placeholder="Escribe aquí…"
-          />
-        )}
-
-        {q.display === "number" && (
-          <input
-            type="number"
-            name={`q_${q.id}`}
-            required={q.required}
-            min={q.minValue ?? undefined}
-            max={q.maxValue ?? undefined}
-            class="field mt-5 max-w-[12rem]"
-          />
-        )}
-      </fieldset>
-    ))
-  }
-
-  <div class="flex flex-col gap-5 border-t border-[var(--color-line)] pt-8">
-    <p class="text-sm leading-relaxed text-[var(--color-ink-muted)]">
-      Envío anónimo. Al completar podrás ver resultados e informes agregados.
-    </p>
-    <p id="submission-status" class="submission-status hidden" role="status" aria-live="polite"></p>
-    <button type="submit" class="btn btn-primary btn-full self-center sm:max-w-xs" id="submit-btn">
-      <span id="submit-text">Enviar respuestas</span>
-      <svg
-        id="submit-spinner"
-        class="hidden"
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        style="animation: spin 1s linear infinite;"
-      >
-        <path d="M12 3a9 9 0 1 0 9 9" />
-      </svg>
-    </button>
-  </div>
+  <nav class="survey-navigation border-t border-[var(--color-line)] pt-5" aria-label="Navegación de la encuesta">
+    <button type="button" class="btn btn-ghost" id="previous-btn">Anterior</button>
+    <button type="button" class="btn btn-primary" id="next-btn">Siguiente</button>
+    <button type="submit" class="btn btn-primary hidden" id="submit-btn"><span id="submit-text">Enviar respuestas</span><svg id="submit-spinner" class="hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 9 9" /></svg></button>
+  </nav>
 </form>
 
-<script
-  define:vars={{
-    ccaaId: ccaaQuestion?.id ?? null,
-    familiesId: familiesQuestion?.id ?? null,
-    familyId: familyQuestion?.id ?? null,
-    missingId: missingProblemQuestion?.id ?? null,
-    openId: openCommentQuestion?.id ?? null,
-    respondentTypeId: respondentTypeQuestion?.id ?? null,
-    missingYesCode: "missing_yes",
-  }}
->
+<section id="survey-complete" class="chapter hidden space-y-5" tabindex="-1" aria-labelledby="survey-complete-title">
+  <p class="eyebrow">Respuesta registrada</p><h2 id="survey-complete-title" class="font-display text-3xl">Gracias por participar</h2>
+  <p class="text-[var(--color-ink-muted)]">Tu respuesta se ha registrado correctamente. Ya puedes consultar los resultados agregados del estudio.</p>
+  <div class="flex flex-col gap-3 sm:flex-row"><a href={`/estudios/${studySlug}/resultados?submitted=1`} class="btn btn-primary btn-full sm:w-auto">Ver resultados</a><a href={`/estudios/${studySlug}`} class="btn btn-ghost btn-full sm:w-auto">Volver al estudio</a></div>
+</section>
+
+<script define:vars={{ ccaaId: ccaaQuestion?.id ?? null, familiesId: familiesQuestion?.id ?? null, familyId: familyQuestion?.id ?? null, missingId: missingProblemQuestion?.id ?? null, openId: openCommentQuestion?.id ?? null, respondentTypeId: respondentTypeQuestion?.id ?? null, missingYesCode: "missing_yes" }}>
   const started = Date.now();
   const form = document.getElementById("survey-form");
-  const estMinutes = Number(form?.getAttribute("data-est-minutes") || "10");
+  const progress = document.getElementById("survey-progress");
+  const complete = document.getElementById("survey-complete");
+  const previousBtn = document.getElementById("previous-btn");
+  const nextBtn = document.getElementById("next-btn");
+  const submitBtn = document.getElementById("submit-btn");
+  let currentStep = 0;
   let isSubmitting = false;
-  let lastBlockedQuestion = null;
 
-  function getRespondentType() {
-    if (!respondentTypeId) return null;
-    const selected = form?.querySelector(`input[name="q_${respondentTypeId}"]:checked`);
-    return selected instanceof HTMLInputElement ? selected.getAttribute("data-option-code") : null;
+  function controls(fieldset) { return Array.from(fieldset.querySelectorAll("input, select, textarea")); }
+  function respondentType() { const selected = respondentTypeId && form?.querySelector(`input[name="q_${respondentTypeId}"]:checked`); return selected instanceof HTMLInputElement ? selected.getAttribute("data-option-code") : null; }
+  function answered(fieldset) {
+    const id = fieldset.getAttribute("data-question-id"); if (!id) return false;
+    const radios = form?.querySelectorAll(`input[name="q_${id}"][type="radio"]`); const checks = form?.querySelectorAll(`input[name="q_${id}"][type="checkbox"]`);
+    if (radios?.length || checks?.length) return !!form?.querySelector(`input[name="q_${id}"]:checked`);
+    return controls(fieldset).some((control) => control instanceof HTMLTextAreaElement || control instanceof HTMLSelectElement || control instanceof HTMLInputElement ? control.value.trim() !== "" : false);
   }
-
-  function isApplicable(fieldset, respondentType) {
+  function applicable(fieldset) {
+    if (fieldset.getAttribute("data-question-id") === respondentTypeId) return true;
     const audience = fieldset.getAttribute("data-audience") || "all";
-    return audience === "all" || !!respondentType && audience.split(",").includes(respondentType);
+    if (audience !== "all" && (!respondentType() || !audience.split(",").includes(respondentType()))) return false;
+    return fieldset.getAttribute("data-conditional") !== "open_comment" || missingYesSelected();
   }
-
-  function resetQuestion(fieldset) {
-    getQuestionControls(fieldset).forEach((control) => {
-      if (control instanceof HTMLInputElement && (control.type === "radio" || control.type === "checkbox")) control.checked = false;
-      else if (control instanceof HTMLSelectElement || control instanceof HTMLTextAreaElement || control instanceof HTMLInputElement) control.value = "";
-    });
-    clearQuestionError(fieldset);
+  function steps() { return Array.from(form?.querySelectorAll("fieldset[data-question-id]") ?? []).filter((node) => node instanceof HTMLElement && applicable(node)); }
+  function reset(fieldset) { controls(fieldset).forEach((control) => { if (control instanceof HTMLInputElement && (control.type === "radio" || control.type === "checkbox")) control.checked = false; else if (control instanceof HTMLInputElement || control instanceof HTMLTextAreaElement || control instanceof HTMLSelectElement) control.value = ""; }); clearError(fieldset); }
+  function syncConditionalRequirements() { const textarea = openId && document.getElementById(`text_${openId}`); if (textarea instanceof HTMLTextAreaElement) textarea.required = missingYesSelected(); }
+  function clearInapplicable() { syncConditionalRequirements(); Array.from(form?.querySelectorAll("fieldset[data-question-id]") ?? []).forEach((node) => { if (node instanceof HTMLElement && !applicable(node)) reset(node); }); }
+  function render({ focus = false } = {}) {
+    const activeSteps = steps(); currentStep = Math.min(Math.max(currentStep, 0), Math.max(activeSteps.length - 1, 0));
+    Array.from(form?.querySelectorAll("fieldset[data-question-id]") ?? []).forEach((node) => { if (node instanceof HTMLElement) node.hidden = node !== activeSteps[currentStep]; });
+    const total = Math.max(activeSteps.length, 1); const completed = activeSteps.filter(answered).length; const percent = Math.round((completed / total) * 100); const required = activeSteps.filter((step) => step.getAttribute("data-required") === "1").length; const minutes = Math.max(8, Math.round(required * .35));
+    const active = activeSteps[currentStep]; active?.querySelector("[data-step-number]")?.replaceChildren(`Pregunta ${currentStep + 1} de ${total}`);
+    const label = document.getElementById("progress-label"), count = document.getElementById("progress-count"), eta = document.getElementById("progress-eta"), bar = document.getElementById("progress-bar");
+    if (label) label.textContent = `Pregunta ${currentStep + 1} de ${total}`; if (count) count.textContent = `${completed} de ${total} completadas · ${percent} %`; if (eta) eta.textContent = percent >= 100 ? "Listo para enviar" : `≈ ${Math.max(1, Math.round(minutes * (1 - completed / total)))} min restantes`; if (bar) bar.style.width = `${percent}%`;
+    if (previousBtn instanceof HTMLButtonElement) previousBtn.hidden = currentStep === 0; if (nextBtn instanceof HTMLButtonElement) nextBtn.classList.toggle("hidden", currentStep === total - 1); if (submitBtn instanceof HTMLButtonElement) submitBtn.classList.toggle("hidden", currentStep !== total - 1);
+    if (focus && active instanceof HTMLElement) { active.scrollIntoView({ behavior: "smooth", block: "start" }); window.setTimeout(() => controls(active)[0]?.focus({ preventScroll: true }), 250); }
   }
-
-  function updateAudience() {
-    const respondentType = getRespondentType();
-    form?.querySelectorAll("fieldset[data-question-id]").forEach((fieldset) => {
-      if (!(fieldset instanceof HTMLElement) || fieldset.getAttribute("data-question-id") === respondentTypeId) return;
-      const show = isApplicable(fieldset, respondentType);
-      if (!show && !fieldset.classList.contains("hidden")) resetQuestion(fieldset);
-      fieldset.classList.toggle("hidden", !show);
-    });
-  }
-
-  function isQuestionAnswered(fieldset) {
-    if (!(fieldset instanceof HTMLElement)) return false;
-    const id = fieldset.getAttribute("data-question-id");
-    if (!id) return false;
-    
-    const radios = form?.querySelectorAll(`input[name="q_${id}"][type="radio"]`);
-    const checks = form?.querySelectorAll(`input[name="q_${id}"][type="checkbox"]`);
-    const select = document.getElementById(`select_${id}`);
-    const text = document.getElementById(`text_${id}`);
-    const number = form?.querySelector(`input[name="q_${id}"][type="number"]`);
-    
-    if (radios?.length) {
-      return !!form?.querySelector(`input[name="q_${id}"]:checked`);
-    } else if (checks?.length) {
-      return !!form?.querySelector(`input[name="q_${id}"]:checked`);
-    } else if (select instanceof HTMLSelectElement) {
-      return !!select.value;
-    } else if (text instanceof HTMLTextAreaElement) {
-      return text.value.trim() !== "";
-    } else if (number instanceof HTMLInputElement) {
-      return number.value !== "";
-    }
-    return false;
-  }
-
-  function getFirstUnansweredRequired() {
-    return getVisibleQuestionFieldsets().find((fieldset) => {
-      const required = fieldset.getAttribute("data-required") === "1" ||
-        getQuestionControls(fieldset).some((control) => control.required);
-      return required && !isQuestionAnswered(fieldset);
-    }) ?? null;
-  }
-
-  function updateLockState() {
-    if (!form) return;
-    const fieldsets = getVisibleQuestionFieldsets();
-    const firstUnansweredRequired = getFirstUnansweredRequired();
-    if (!firstUnansweredRequired) lastBlockedQuestion = null;
-
-    let foundUnanswered = false;
-    for (const fs of fieldsets) {
-      if (fs === firstUnansweredRequired) {
-        foundUnanswered = true;
-        fs.classList.remove("locked");
-        fs.setAttribute("aria-disabled", "false");
-      } else if (foundUnanswered) {
-        fs.classList.add("locked");
-        fs.setAttribute("aria-disabled", "true");
-      } else {
-        fs.classList.remove("locked");
-        fs.setAttribute("aria-disabled", "false");
-      }
-    }
-  }
-
-  function updateProgress() {
-    if (!form) return;
-    const fieldsets = Array.from(form.querySelectorAll("fieldset[data-question-id]")).filter(
-      (fs) => !(fs instanceof HTMLElement && fs.classList.contains("hidden")),
-    );
-    let answered = 0;
-    for (const fs of fieldsets) {
-      const id = fs.getAttribute("data-question-id");
-      if (!id) continue;
-      const radios = form.querySelectorAll(`input[name="q_${id}"][type="radio"]`);
-      const checks = form.querySelectorAll(`input[name="q_${id}"][type="checkbox"]`);
-      const select = document.getElementById(`select_${id}`);
-      const text = document.getElementById(`text_${id}`);
-      const number = form.querySelector(`input[name="q_${id}"][type="number"]`);
-      if (radios.length) {
-        if (form.querySelector(`input[name="q_${id}"]:checked`)) answered += 1;
-      } else if (checks.length) {
-        if (form.querySelector(`input[name="q_${id}"]:checked`)) answered += 1;
-      } else if (select instanceof HTMLSelectElement && select.value) answered += 1;
-      else if (text instanceof HTMLTextAreaElement && text.value.trim()) answered += 1;
-      else if (number instanceof HTMLInputElement && number.value !== "") answered += 1;
-    }
-    const total = Math.max(fieldsets.length, 1);
-    const pct = Math.round((answered / total) * 100);
-    const bar = document.getElementById("progress-bar");
-    const label = document.getElementById("progress-label");
-    const eta = document.getElementById("progress-eta");
-    const currentQ = document.getElementById("current-q");
-    const totalQ = document.getElementById("total-q");
-    
-    if (bar) bar.style.width = `${pct}%`;
-    if (label) label.textContent = `${pct}%`;
-    if (currentQ) currentQ.textContent = String(answered);
-    if (totalQ) totalQ.textContent = String(total);
-    if (eta) {
-      const left = Math.max(1, Math.round(estMinutes * (1 - answered / total)));
-      eta.textContent = pct >= 100 ? "Listo para enviar" : `≈ ${left} min restantes`;
-    }
-  }
-
-  form?.addEventListener("change", (event) => {
-    if (event.target instanceof HTMLInputElement && event.target.name === `q_${respondentTypeId}`) updateAudience();
-    toggleOpenComment();
-    updateProgress();
-    updateLockState();
-    const fieldset = event.target instanceof Element
-      ? event.target.closest("fieldset[data-question-id]")
-      : null;
-    if (fieldset instanceof HTMLElement && isQuestionAnswered(fieldset)) {
-      clearQuestionError(fieldset);
-    }
-  });
-  form?.addEventListener("input", (event) => {
-    updateProgress();
-    updateLockState();
-    const fieldset = event.target instanceof Element
-      ? event.target.closest("fieldset[data-question-id]")
-      : null;
-    if (fieldset instanceof HTMLElement && isQuestionAnswered(fieldset)) {
-      clearQuestionError(fieldset);
-    }
-  });
-  form?.addEventListener("click", (event) => {
-    const fieldset = event.target instanceof Element
-      ? event.target.closest("fieldset[data-question-id].locked")
-      : null;
-    if (!(fieldset instanceof HTMLElement)) return;
-    event.preventDefault();
-    event.stopPropagation();
-    explainBlockedQuestion();
-  });
-  form?.addEventListener("focusin", (event) => {
-    const fieldset = event.target instanceof Element
-      ? event.target.closest("fieldset[data-question-id].locked")
-      : null;
-    if (fieldset instanceof HTMLElement) explainBlockedQuestion();
-  });
-  updateProgress();
-  updateAudience();
-  updateLockState();
-
-  function setSubmissionStatus(message, state) {
-    const status = document.getElementById("submission-status");
-    if (!(status instanceof HTMLElement)) return;
-    status.textContent = message;
-    status.dataset.state = state;
-    status.classList.remove("hidden");
-  }
-
-  function setSubmitting(submitting) {
-    const btn = document.getElementById("submit-btn");
-    const text = document.getElementById("submit-text");
-    const spinner = document.getElementById("submit-spinner");
-    if (form instanceof HTMLFormElement) form.setAttribute("aria-busy", String(submitting));
-    if (btn instanceof HTMLButtonElement) btn.disabled = submitting;
-    if (text) text.textContent = submitting ? "Enviando..." : "Enviar respuestas";
-    if (spinner) spinner.classList.toggle("hidden", !submitting);
-  }
-
-  form?.addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-    if (isSubmitting) return;
-
-    const input = document.getElementById("durationMs");
-    if (input instanceof HTMLInputElement) input.value = String(Date.now() - started);
-    if (!validateClient()) return;
-
-    isSubmitting = true;
-    setSubmitting(true);
-
-    try {
-      const response = await fetch("/api/survey", {
-        method: "POST",
-        body: new FormData(form),
-        headers: { Accept: "application/json" },
-      });
-      const contentType = response.headers.get("content-type") || "";
-      if (!contentType.includes("application/json")) {
-        const body = await response.text();
-        console.error("Survey API returned a non-JSON response", {
-          status: response.status,
-          contentType,
-          body,
-        });
-        throw new Error(`La API devolvió HTTP ${response.status}: ${body}`);
-      }
-      let payload;
-      try {
-        payload = await response.json();
-      } catch (error) {
-        throw new Error("La API devolvió una respuesta no válida.", { cause: error });
-      }
-      if (!response.ok || payload?.ok !== true) {
-        throw new Error(payload?.error || `La API devolvió HTTP ${response.status}.`);
-      }
-      setSubmissionStatus("Encuesta enviada correctamente. Gracias por participar.", "success");
-    } catch (error) {
-      console.error("Survey submission failed", error);
-      setSubmissionStatus("No se ha podido enviar la encuesta. Inténtalo de nuevo.", "error");
-      isSubmitting = false;
-      setSubmitting(false);
-    }
-  });
-
-  function filterPrincipalFamily() {
-    if (!familiesId || !familyId) return;
-    const select = document.getElementById(`select_${familyId}`);
-    if (!(select instanceof HTMLSelectElement)) return;
-    const checked = Array.from(
-      form?.querySelectorAll(`input[name="q_${familiesId}"]:checked`) ?? [],
-    );
-    const allowedCodes = new Set(
-      checked.map((el) =>
-        el instanceof HTMLInputElement ? el.getAttribute("data-option-code") || "" : "",
-      ),
-    );
-    const allowedIds = new Set(
-      checked.map((el) => (el instanceof HTMLInputElement ? el.value : "")),
-    );
-    const current = select.value;
-    let keep = false;
-    for (const opt of Array.from(select.options)) {
-      if (!opt.value) {
-        opt.hidden = false;
-        continue;
-      }
-      const code = opt.getAttribute("data-option-code") || "";
-      const match = allowedIds.has(opt.value) || allowedCodes.has(code);
-      opt.hidden = !match;
-      opt.disabled = !match;
-      if (match && opt.value === current) keep = true;
-    }
-    if (!keep) select.value = "";
-  }
-
-  function enforceMaxSelections(group) {
-    const fieldset = group.closest("fieldset");
-    const max = Number(fieldset?.getAttribute("data-max-selections") || "0");
-    if (!max) return;
-    const boxes = Array.from(group.querySelectorAll("input.multi-option"));
-    const checked = boxes.filter((b) => b instanceof HTMLInputElement && b.checked);
-    if (checked.length > max) {
-      const last = checked[checked.length - 1];
-      if (last instanceof HTMLInputElement) last.checked = false;
-    }
-    const hint = fieldset?.querySelector(`[data-multi-hint]`);
-    if (hint) {
-      const n = boxes.filter((b) => b instanceof HTMLInputElement && b.checked).length;
-      hint.textContent = `Seleccionadas ${n} de ${max} máximo.`;
-    }
-  }
-
-  form?.querySelectorAll("[data-multi-group]").forEach((group) => {
-    group.querySelectorAll("input.multi-option").forEach((el) => {
-      el.addEventListener("change", () => {
-        enforceMaxSelections(group);
-        if (familiesId && group.getAttribute("data-multi-group") === familiesId) {
-          filterPrincipalFamily();
-        }
-        updateProgress();
-        updateLockState();
-      });
-    });
-  });
-
-  filterPrincipalFamily();
-  updateLockState();
-
-  function missingYesSelected() {
-    if (!missingId) return false;
-    const checked = form?.querySelector(`input[name="q_${missingId}"]:checked`);
-    if (!(checked instanceof HTMLInputElement)) return false;
-    return checked.getAttribute("data-option-code") === missingYesCode;
-  }
-
-  function toggleOpenComment() {
-    const fs = form?.querySelector('[data-conditional="open_comment"]');
-    const ta = openId ? document.getElementById(`text_${openId}`) : null;
-    if (!(fs instanceof HTMLElement)) return;
-    const show = missingYesSelected();
-    fs.classList.toggle("hidden", !show);
-    if (ta instanceof HTMLTextAreaElement) {
-      ta.required = show;
-      if (!show) ta.value = "";
-    }
-    updateProgress();
-    updateLockState();
-  }
-
-  if (missingId) {
-    form?.querySelectorAll(`input[name="q_${missingId}"]`).forEach((el) => {
-      el.addEventListener("change", toggleOpenComment);
-    });
-  }
-  toggleOpenComment();
-
-  function getVisibleQuestionFieldsets() {
-    return Array.from(form?.querySelectorAll("fieldset[data-question-id]") ?? []).filter(
-      (fieldset) =>
-        fieldset instanceof HTMLElement && !fieldset.classList.contains("hidden"),
-    );
-  }
-
-  function getQuestionControls(fieldset) {
-    return Array.from(fieldset.querySelectorAll("input, select, textarea")).filter(
-      (control) =>
-        control instanceof HTMLInputElement ||
-        control instanceof HTMLSelectElement ||
-        control instanceof HTMLTextAreaElement,
-    );
-  }
-
-  function setQuestionError(fieldset, message) {
-    fieldset.classList.add("has-validation-error");
-    const error = fieldset.querySelector("[data-validation-message]");
-    if (error) error.textContent = message;
-    getQuestionControls(fieldset).forEach((control) => control.setAttribute("aria-invalid", "true"));
-  }
-
-  function clearQuestionError(fieldset) {
-    fieldset.classList.remove("has-validation-error");
-    const error = fieldset.querySelector("[data-validation-message]");
-    if (error) error.textContent = "";
-    getQuestionControls(fieldset).forEach((control) => control.removeAttribute("aria-invalid"));
-  }
-
-  function focusQuestion(fieldset) {
-    fieldset.scrollIntoView({ behavior: "smooth", block: "center" });
-    getQuestionControls(fieldset)[0]?.focus({ preventScroll: true });
-  }
-
-  function explainBlockedQuestion() {
-    const pending = getFirstUnansweredRequired();
-    if (!(pending instanceof HTMLElement)) return;
-    if (lastBlockedQuestion !== pending) {
-      setQuestionError(
-        pending,
-        "Para continuar, responde primero la pregunta anterior obligatoria.",
-      );
-      lastBlockedQuestion = pending;
-    }
-    focusQuestion(pending);
-  }
-
-  function validateClient() {
-    const fieldsets = getVisibleQuestionFieldsets();
-    fieldsets.forEach(clearQuestionError);
-    let firstInvalid = null;
-
-    for (const fieldset of fieldsets) {
-      const required = fieldset.getAttribute("data-required") === "1" ||
-        getQuestionControls(fieldset).some((control) => control.required);
-      if (required && !isQuestionAnswered(fieldset)) {
-        setQuestionError(fieldset, "Falta responder esta pregunta obligatoria para poder enviar la encuesta.");
-        firstInvalid ??= fieldset;
-      } else if (getQuestionControls(fieldset).some(
-        (control) => !control.disabled && !control.checkValidity(),
-      )) {
-        setQuestionError(fieldset, "Revisa la respuesta para poder continuar.");
-        firstInvalid ??= fieldset;
-      }
-    }
-    if (firstInvalid) {
-      focusQuestion(firstInvalid);
-      return false;
-    }
-
-    if (familiesId && familyId) {
-      const selectedFamilies = Array.from(
-        form?.querySelectorAll(`input[name="q_${familiesId}"]:checked`) ?? [],
-      );
-      const selectedCodes = selectedFamilies.map((el) =>
-        el instanceof HTMLInputElement ? el.getAttribute("data-option-code") || "" : "",
-      );
-      const selectedIds = selectedFamilies.map((el) =>
-        el instanceof HTMLInputElement ? el.value : "",
-      );
-      const principal = document.getElementById(`select_${familyId}`);
-      if (principal instanceof HTMLSelectElement && principal.value) {
-        const pOpt = principal.selectedOptions[0];
-        const pCode = pOpt?.getAttribute("data-option-code") || "";
-        const ok =
-          selectedIds.includes(principal.value) || selectedCodes.includes(pCode);
-        if (!ok) {
-          const fieldset = principal.closest("fieldset[data-question-id]");
-          if (fieldset instanceof HTMLElement) {
-            setQuestionError(
-              fieldset,
-              "La familia principal debe estar entre las familias en las que has impartido.",
-            );
-            focusQuestion(fieldset);
-          }
-          return false;
-        }
-      }
-    }
-    if (missingYesSelected() && openId) {
-      const ta = document.getElementById(`text_${openId}`);
-      if (ta instanceof HTMLTextAreaElement && ta.value.trim() === "") {
-        const fieldset = ta.closest("fieldset[data-question-id]");
-        if (fieldset instanceof HTMLElement) {
-          setQuestionError(fieldset, "Describe el problema que no aparece en la lista.");
-          focusQuestion(fieldset);
-        }
-        return false;
-      }
-    }
-    const limited = form?.querySelectorAll("fieldset[data-max-selections]");
-    for (const fs of limited ?? []) {
-      const max = Number(fs.getAttribute("data-max-selections") || "0");
-      if (!max) continue;
-      const id = fs.getAttribute("data-question-id");
-      const n = form?.querySelectorAll(`input[name="q_${id}"]:checked`).length ?? 0;
-      if (n > max) {
-        if (fs instanceof HTMLElement) {
-          setQuestionError(fs, `No puedes seleccionar más de ${max} opciones en esta pregunta.`);
-          focusQuestion(fs);
-        }
-        return false;
-      }
-    }
+  function setError(fieldset, message) { fieldset.classList.add("has-validation-error"); const error = fieldset.querySelector("[data-validation-message]"); if (error) error.textContent = message; controls(fieldset).forEach((control) => control.setAttribute("aria-invalid", "true")); }
+  function clearError(fieldset) { fieldset.classList.remove("has-validation-error"); const error = fieldset.querySelector("[data-validation-message]"); if (error) error.textContent = ""; controls(fieldset).forEach((control) => control.removeAttribute("aria-invalid")); }
+  function focusError(fieldset) { fieldset.scrollIntoView({ behavior: "smooth", block: "center" }); controls(fieldset)[0]?.focus({ preventScroll: true }); }
+  function validStep(fieldset) {
+    clearError(fieldset); const required = fieldset.getAttribute("data-required") === "1" || controls(fieldset).some((control) => control.required);
+    if (required && !answered(fieldset)) { setError(fieldset, "Responde esta pregunta para poder continuar."); focusError(fieldset); return false; }
+    if (controls(fieldset).some((control) => !control.disabled && !control.checkValidity())) { setError(fieldset, "Revisa la respuesta para poder continuar."); focusError(fieldset); return false; }
+    if (familyId && fieldset.getAttribute("data-question-id") === familyId) { const principal = document.getElementById(`select_${familyId}`); const selected = Array.from(form?.querySelectorAll(`input[name="q_${familiesId}"]:checked`) ?? []).map((node) => node instanceof HTMLInputElement ? node.value : ""); if (principal instanceof HTMLSelectElement && principal.value && !selected.includes(principal.value)) { setError(fieldset, "La familia principal debe estar entre las familias en las que has impartido."); focusError(fieldset); return false; } }
     return true;
   }
+  function missingYesSelected() { const selected = missingId && form?.querySelector(`input[name="q_${missingId}"]:checked`); return selected instanceof HTMLInputElement && selected.getAttribute("data-option-code") === missingYesCode; }
+  function filterPrincipalFamily() { if (!familiesId || !familyId) return; const select = document.getElementById(`select_${familyId}`); if (!(select instanceof HTMLSelectElement)) return; const allowed = new Set(Array.from(form?.querySelectorAll(`input[name="q_${familiesId}"]:checked`) ?? []).map((node) => node instanceof HTMLInputElement ? node.value : "")); for (const option of Array.from(select.options)) { if (!option.value) continue; option.hidden = !allowed.has(option.value); option.disabled = !allowed.has(option.value); } if (select.value && !allowed.has(select.value)) select.value = ""; }
+  function enforceMax(group) { const fieldset = group.closest("fieldset"); const max = Number(fieldset?.getAttribute("data-max-selections") || "0"); if (!max) return; const checked = Array.from(group.querySelectorAll("input.multi-option")).filter((node) => node instanceof HTMLInputElement && node.checked); if (checked.length > max && checked.at(-1) instanceof HTMLInputElement) checked.at(-1).checked = false; const hint = fieldset?.querySelector("[data-multi-hint]"); if (hint) hint.textContent = `Seleccionadas ${Math.min(checked.length, max)} de ${max} máximo.`; }
+  previousBtn?.addEventListener("click", () => { currentStep -= 1; render({ focus: true }); });
+  nextBtn?.addEventListener("click", () => { const active = steps()[currentStep]; if (active && validStep(active)) { currentStep += 1; render({ focus: true }); } });
+  form?.addEventListener("change", (event) => { const target = event.target; if (target instanceof HTMLInputElement && target.name === `q_${respondentTypeId}`) { currentStep = 0; clearInapplicable(); } if (target instanceof HTMLInputElement && target.name === `q_${familiesId}`) filterPrincipalFamily(); const group = target instanceof Element ? target.closest("[data-multi-group]") : null; if (group instanceof HTMLElement) enforceMax(group); clearInapplicable(); render(); const fieldset = target instanceof Element ? target.closest("fieldset") : null; if (fieldset instanceof HTMLElement && answered(fieldset)) clearError(fieldset); });
+  form?.addEventListener("input", (event) => { const fieldset = event.target instanceof Element ? event.target.closest("fieldset") : null; if (fieldset instanceof HTMLElement && answered(fieldset)) clearError(fieldset); render(); });
+  function setSubmitting(submitting) { if (form instanceof HTMLFormElement) form.setAttribute("aria-busy", String(submitting)); if (submitBtn instanceof HTMLButtonElement) submitBtn.disabled = submitting; const text = document.getElementById("submit-text"), spinner = document.getElementById("submit-spinner"); if (text) text.textContent = submitting ? "Enviando..." : "Enviar respuestas"; if (spinner) spinner.classList.toggle("hidden", !submitting); }
+  form?.addEventListener("submit", async (event) => { event.preventDefault(); if (isSubmitting) return; const active = steps()[currentStep]; if (!active || !validStep(active)) return; const duration = document.getElementById("durationMs"); if (duration instanceof HTMLInputElement) duration.value = String(Date.now() - started); isSubmitting = true; setSubmitting(true); try { const response = await fetch("/api/survey", { method: "POST", body: new FormData(form), headers: { Accept: "application/json" } }); const contentType = response.headers.get("content-type") || ""; if (!contentType.includes("application/json")) { const body = await response.text(); console.error("Survey API returned a non-JSON response", { status: response.status, contentType, body }); throw new Error(`La API devolvió HTTP ${response.status}: ${body}`); } const payload = await response.json(); if (!response.ok || payload?.ok !== true) throw new Error(payload?.error || `La API devolvió HTTP ${response.status}.`); form.hidden = true; progress?.classList.add("hidden"); complete?.classList.remove("hidden"); if (complete instanceof HTMLElement) { complete.focus(); complete.scrollIntoView({ behavior: "smooth", block: "center" }); } } catch (error) { console.error("Survey submission failed", error); const activeStep = steps()[currentStep]; if (activeStep) setError(activeStep, "No se ha podido enviar la encuesta. Inténtalo de nuevo."); isSubmitting = false; setSubmitting(false); } });
+  filterPrincipalFamily(); clearInapplicable(); render();
 </script>

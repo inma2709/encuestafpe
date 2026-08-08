@@ -1,3 +1,5 @@
+import type { GroupedMetricResult, MetricResult } from "@/services/analyticsTypes";
+
 export type QuestionType =
   | "single"
   | "multi"
@@ -271,6 +273,10 @@ export interface ReportsView {
   comparatives: ComparativeRow[];
   headlines: HeadlineCard[];
   temporal: TemporalPoint[];
+  /** Resultados calculados por el motor analítico; la interfaz no los recalcula. */
+  metrics: MetricResult[];
+  /** Comparaciones permitidas por el catálogo, agregadas por el mismo motor. */
+  profileComparisons: GroupedMetricResult[];
 }
 
 export class DomainError extends Error {

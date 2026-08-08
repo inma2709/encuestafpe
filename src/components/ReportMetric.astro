@@ -1,0 +1,102 @@
+---
+import type { MetricResult } from "@/services/analyticsTypes";
+
+interface Props {
+  metric: MetricResult | undefined;
+  featured?: boolean;
+}
+
+const { metric, featured = false } = Astro.props;
+const formatNumber = new Intl.NumberFormat("es-ES", { maximumFractionDigits: 1 });
+const base = metric
+  ? `n = ${metric.denominator.nValid} respuestas válidas de ${metric.denominator.nEligible} personas a quienes correspondía la pregunta.`
+  : "Esta medida no está disponible para la selección actual.";
+const suppressed = metric?.sampleStatus === "hidden";
+const caution = metric?.sampleStatus === "caution" || metric?.sampleStatus === "very_low";
+const options = metric && "options" in metric ? metric.options : [];
+const maxPercentage = Math.max(...options.map((option) => option.percentage), 1);
+---
+
+<article class:list={["report-metric", { "report-metric--featured": featured }]}>
+  {metric ? (
+    <>
+      <header class="report-metric__header">
+        <h3>{metric.label}</h3>
+        {metric.aggregation === "multi" && <p class="report-metric__selection">Se podían seleccionar varias opciones.</p>}
+      </header>
+
+      {suppressed ? (
+        <div class="report-metric__empty" role="status">
+          Muestra insuficiente para publicar este desglose.
+        </div>
+      ) : metric.aggregation === "number" ? (
+        <div class="report-metric__numeric" aria-label={`Resumen numérico de ${metric.label}`}>
+          {metric.median == null ? (
+            <div class="report-metric__empty">No hay respuestas válidas para esta medida.</div>
+          ) : (
+            <>
+              <div>
+                <span>Mediana</span>
+                <strong>{formatNumber.format(metric.median)} €</strong>
+              </div>
+              <div>
+                <span>Rango central</span>
+                <strong>{formatNumber.format(metric.p25 ?? 0)}–{formatNumber.format(metric.p75 ?? 0)} €</strong>
+              </div>
+            </>
+          )}
+        </div>
+      ) : (
+        <ol class:list={["report-metric__bars", { "report-metric__bars--ranked": metric.aggregation === "multi" }]}>
+          {options.map((option) => (
+            <li>
+              <div class="report-metric__bar-label">
+                {option.rank && <span class="report-metric__rank" aria-label={`Posición ${option.rank}`}>{option.rank}</span>}
+                <span>{option.label}</span>
+              </div>
+              <div class="report-metric__bar-row">
+                <div class="report-metric__rail" aria-hidden="true"><span style={`width: ${(option.percentage / maxPercentage) * 100}%`}></span></div>
+                <strong>{option.percentage} %</strong>
+                <span class="report-metric__count">n={option.count}</span>
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
+
+      {metric.aggregation === "likert" && !suppressed && (
+        <p class="report-metric__likert">
+          <span>Desacuerdo: {metric.unfavorablePercentage ?? 0} %</span>
+          <span>Neutral: {metric.neutralPercentage ?? 0} %</span>
+          <span>Acuerdo: {metric.favorablePercentage ?? 0} %</span>
+        </p>
+      )}
+      {caution && !suppressed && <p class="report-metric__notice">Base reducida. Interpreta este resultado con cautela.</p>}
+      <p class="report-metric__meta">{base}</p>
+    </>
+  ) : (
+    <div class="report-metric__empty">Esta medida no aplica a la selección actual.</div>
+  )}
+</article>
+
+<style>
+  .report-metric { padding: 1.15rem; border: 1px solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); }
+  .report-metric--featured { background: linear-gradient(150deg, rgb(74 92 60 / .09), var(--color-surface) 52%); border-color: var(--color-line-strong); }
+  .report-metric__header h3 { margin: 0; font-size: 1.15rem; }
+  .report-metric__selection, .report-metric__meta, .report-metric__notice { margin: .55rem 0 0; color: var(--color-ink-muted); font-size: .82rem; line-height: 1.45; }
+  .report-metric__notice { color: var(--color-brand-dark); font-weight: 600; }
+  .report-metric__bars { display: grid; gap: .8rem; margin: 1.25rem 0 0; padding: 0; list-style: none; }
+  .report-metric__bar-label { display: flex; gap: .45rem; align-items: baseline; font-size: .9rem; line-height: 1.35; }
+  .report-metric__rank { display: inline-grid; place-items: center; width: 1.35rem; height: 1.35rem; border-radius: 50%; background: rgb(74 92 60 / .12); color: var(--color-brand-dark); font-size: .72rem; font-weight: 700; }
+  .report-metric__bar-row { display: grid; grid-template-columns: minmax(3rem, 1fr) auto auto; gap: .55rem; align-items: center; margin-top: .28rem; font-size: .8rem; }
+  .report-metric__rail { height: .45rem; overflow: hidden; border-radius: 99px; background: var(--color-paper-deep); }
+  .report-metric__rail span { display: block; height: 100%; border-radius: inherit; background: var(--color-brand); }
+  .report-metric__count { color: var(--color-ink-muted); min-width: 2.8rem; }
+  .report-metric__likert { display: flex; flex-wrap: wrap; gap: .45rem .9rem; margin: 1rem 0 0; font-size: .78rem; color: var(--color-ink-muted); }
+  .report-metric__numeric { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; margin-top: 1rem; }
+  .report-metric__numeric div { padding: .8rem; border-radius: var(--radius-sm); background: var(--color-paper); }
+  .report-metric__numeric span { display: block; color: var(--color-ink-muted); font-size: .75rem; }
+  .report-metric__numeric strong { display: block; margin-top: .15rem; color: var(--color-brand-dark); font-family: var(--font-display); font-size: 1.35rem; }
+  .report-metric__empty { margin-top: 1rem; padding: .85rem; border-left: 3px solid var(--color-line-strong); background: var(--color-paper); color: var(--color-ink-muted); font-size: .9rem; }
+  @media (min-width: 640px) { .report-metric { padding: 1.35rem; } }
+</style>
