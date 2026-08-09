@@ -7,77 +7,538 @@ import { DomainError } from "@/types";
 import { assertUnlockToken, getResults } from "@/services";
 
 const { slug } = Astro.params;
+
 if (!slug) {
   return Astro.redirect("/");
 }
 
 const token = getUnlockCookie(Astro.cookies, slug);
 const submitted = Astro.url.searchParams.get("submitted") === "1";
+
 let locked = false;
 let results;
 let errorMessage: string | undefined;
 
 try {
-  await assertUnlockToken(slug, token);
-  results = await getResults(slug);
-} catch (err) {
-  if (err instanceof DomainError && err.code === "FORBIDDEN") {
+  if (!token) {
     locked = true;
-  } else if (err instanceof DomainError && err.code === "NOT_FOUND") {
-    return new Response(null, { status: 404, statusText: "Not Found" });
   } else {
-    errorMessage = err instanceof Error ? err.message : "Error al cargar resultados";
+    await assertUnlockToken(slug, token);
+    results = await getResults(slug);
+  }
+} catch (error) {
+  if (error instanceof DomainError) {
+    if (error.code === "UNAUTHORIZED" || error.code === "FORBIDDEN") {
+      locked = true;
+    } else {
+      errorMessage = error.message;
+    }
+  } else {
+    errorMessage =
+      "No hemos podido cargar los resultados en este momento. Inténtalo de nuevo más tarde.";
   }
 }
 ---
 
-<BaseLayout title={results ? `Resultados · ${results.studyTitle}` : "Resultados"} width="narrow">
+<BaseLayout
+  title={results ? `Resultados · ${results.studyTitle}` : "Resultados"}
+  width="narrow"
+>
   {
     locked ? (
-      <section class="fade-up space-y-8">
-        <p class="eyebrow">Acceso restringido</p>
-        <h1 class="font-display text-3xl sm:text-4xl lg:text-5xl text-balance">Resultados</h1>
-        <p class="lede">
-          Para ver los datos completos, rellena antes la encuesta. <strong>Todos participamos, todos sumamos.</strong>
-        </p>
-        <p class="text-[var(--color-ink-muted)]">
-          Tu participación es totalmente anónima y desbloquea el acceso a resultados e informes automáticos.
-        </p>
-        <div class="flex flex-col sm:flex-row gap-4">
-          <a href={`/estudios/${slug}/participar`} class="btn btn-primary btn-full sm:w-auto">
-            Completar la encuesta
+      <main class="results-page">
+        <section class="locked-card">
+          <div class="locked-card__icon">
+            <Icon name="lock" size={24} />
+          </div>
+
+          <p class="eyebrow">Acceso a resultados</p>
+
+          <h1>
+            Primero participa.
+            <span>Después descubre la realidad del sector.</span>
+          </h1>
+
+          <p class="locked-card__lead">
+            Los resultados completos están reservados a quienes participan
+            en el estudio.
+          </p>
+
+          <p class="locked-card__text">
+            Para proteger la calidad de los datos y mantener un principio
+            sencillo de reciprocidad, pedimos que completes primero la
+            encuesta. Tu participación es anónima y, al finalizar, tendrás
+            acceso inmediato a los resultados agregados y a los informes
+            disponibles.
+          </p>
+
+          <div class="locked-card__features">
+            <div class="feature">
+              <Icon name="shield-check" size={20} />
+              <span>Participación anónima</span>
+            </div>
+
+            <div class="feature">
+              <Icon name="chart-bar" size={20} />
+              <span>Resultados agregados</span>
+            </div>
+
+            <div class="feature">
+              <Icon name="file-text" size={20} />
+              <span>Informes automáticos</span>
+            </div>
+          </div>
+
+          <div class="locked-card__actions">
+            <a
+              href={`/estudios/${slug}/participar`}
+              class="btn btn-primary btn-full sm:w-auto"
+            >
+              <span>Completar la encuesta</span>
+              <Icon name="arrow-right" size={18} />
+            </a>
+
+            <a
+              href={`/estudios/${slug}/informes`}
+              class="btn btn-ghost btn-full sm:w-auto"
+            >
+              <Icon name="file-text" size={18} />
+              <span>Ver informes</span>
+            </a>
+          </div>
+
+          <p class="locked-card__note">
+            Todos participamos. Todos sumamos. Cuantas más respuestas
+            recibamos, más fiel será la fotografía de la FPE.
+          </p>
+        </section>
+      </main>
+    ) : errorMessage ? (
+      <main class="results-page">
+        <section class="error-card">
+          <div class="error-card__icon">
+            <Icon name="alert-circle" size={22} />
+          </div>
+
+          <h1>No hemos podido cargar los resultados</h1>
+
+          <p>{errorMessage}</p>
+
+          <a href={`/estudios/${slug}`} class="btn btn-ghost">
+            Volver al estudio
+          </a>
+        </section>
+      </main>
+    ) : results ? (
+      <main class="results-page">
+        {
+          submitted && (
+            <section class="success-banner">
+              <div class="success-banner__icon">
+                <Icon name="check" size={20} />
+              </div>
+
+              <div>
+                <strong>Tu respuesta ya forma parte del estudio.</strong>
+                <p>
+                  Gracias por participar. Desde este momento puedes consultar
+                  los resultados agregados y los informes disponibles.
+                </p>
+              </div>
+            </section>
+          )
+        }
+
+        <header class="results-header">
+          <div>
+            <p class="eyebrow">Resultados del estudio</p>
+
+            <h1>{results.studyTitle}</h1>
+
+            <p class="results-header__description">
+              Una fotografía colectiva construida a partir de las respuestas
+              de profesionales de la Formación Profesional para el Empleo.
+            </p>
+          </div>
+
+          <div class="results-header__badge">
+            <span class="results-header__badge-dot"></span>
+            Datos agregados
+          </div>
+        </header>
+
+        <section class="results-intro">
+          <div class="results-intro__item">
+            <Icon name="users" size={20} />
+
+            <div>
+              <strong>Una visión colectiva</strong>
+              <p>
+                Las respuestas individuales se muestran únicamente de forma
+                agregada.
+              </p>
+            </div>
+          </div>
+
+          <div class="results-intro__item">
+            <Icon name="refresh-cw" size={20} />
+
+            <div>
+              <strong>Resultados vivos</strong>
+              <p>
+                Los datos evolucionan a medida que nuevas personas participan
+                en el estudio.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <ResultsSummary results={results} />
+
+        <section class="reports-cta">
+          <div class="reports-cta__content">
+            <p class="eyebrow">Profundiza en los datos</p>
+
+            <h2>Los resultados son solo el principio.</h2>
+
+            <p>
+              Consulta los informes automáticos para explorar patrones,
+              distribuciones y relaciones entre las distintas dimensiones
+              analizadas en el estudio.
+            </p>
+          </div>
+
+          <a
+            href={`/estudios/${slug}/informes`}
+            class="btn btn-primary btn-full sm:w-auto"
+          >
+            <span>Ver informes automáticos</span>
             <Icon name="arrow-right" size={18} />
           </a>
-          <a href="/informes" class="btn btn-ghost btn-full sm:w-auto">
-            Ver hub público
-          </a>
-        </div>
-      </section>
-    ) : errorMessage ? (
-      <p class="text-[var(--color-danger)]">{errorMessage}</p>
-    ) : results ? (
-      <section class="space-y-10">
-        <header class="fade-up space-y-4">
-          {
-            submitted && (
-              <p
-                class="rounded-[var(--radius-md)] border border-[var(--color-brand)]/25 bg-[rgb(45_103_96/0.08)] px-4 py-3 text-sm font-semibold text-[var(--color-brand-dark)]"
-                role="status"
-              >
-                Encuesta enviada correctamente. Gracias por participar.
-              </p>
-            )
-          }
-          <p class="badge badge-accent">Gracias por participar</p>
-          <h1 class="font-display text-2xl sm:text-4xl lg:text-5xl text-balance">Resultados agregados</h1>
-          <p class="text-[var(--color-ink-muted)]">{results.studyTitle}</p>
-          <a href={`/estudios/${slug}/informes`} class="btn btn-ghost btn-full sm:w-auto">
-            <Icon name="chart-bar" size={18} />
-            Ver informes automáticos
-          </a>
-        </header>
-        <ResultsSummary results={results} />
-      </section>
+        </section>
+      </main>
     ) : null
   }
 </BaseLayout>
+
+<style>
+  .results-page {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding-block: clamp(2rem, 5vw, 4rem);
+  }
+
+  .eyebrow {
+    margin: 0 0 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-primary, #176b5b);
+  }
+
+  /* LOCKED */
+
+  .locked-card {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(1.75rem, 5vw, 3.5rem);
+    border: 1px solid rgba(20, 65, 57, 0.12);
+    border-radius: 1.5rem;
+    background:
+      radial-gradient(
+        circle at 100% 0%,
+        rgba(56, 163, 140, 0.12),
+        transparent 35%
+      ),
+      #fff;
+    box-shadow: 0 20px 60px rgba(22, 55, 48, 0.08);
+  }
+
+  .locked-card__icon {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 1.5rem;
+    border-radius: 0.9rem;
+    color: var(--color-primary, #176b5b);
+    background: rgba(23, 107, 91, 0.09);
+  }
+
+  .locked-card h1 {
+    max-width: 780px;
+    margin: 0;
+    font-size: clamp(2rem, 5vw, 3.8rem);
+    line-height: 1.02;
+    letter-spacing: -0.045em;
+  }
+
+  .locked-card h1 span {
+    display: block;
+    color: var(--color-primary, #176b5b);
+  }
+
+  .locked-card__lead {
+    max-width: 680px;
+    margin: 1.5rem 0 0;
+    font-size: clamp(1.05rem, 2vw, 1.25rem);
+    line-height: 1.6;
+    color: #283d38;
+  }
+
+  .locked-card__text {
+    max-width: 720px;
+    margin: 1rem 0 0;
+    line-height: 1.7;
+    color: #5c6d69;
+  }
+
+  .locked-card__features {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+
+  .feature {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid rgba(20, 65, 57, 0.1);
+    border-radius: 0.9rem;
+    background: rgba(248, 251, 250, 0.85);
+    color: #334a44;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .feature :global(svg) {
+    flex: none;
+    color: var(--color-primary, #176b5b);
+  }
+
+  .locked-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+
+  .locked-card__note {
+    margin: 1.5rem 0 0;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: #71807c;
+  }
+
+  /* SUCCESS */
+
+  .success-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.15rem 1.25rem;
+    border: 1px solid rgba(32, 135, 103, 0.18);
+    border-radius: 1rem;
+    background: rgba(227, 247, 239, 0.72);
+  }
+
+  .success-banner__icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 999px;
+    background: #fff;
+    color: #16715b;
+  }
+
+  .success-banner strong {
+    display: block;
+    margin-bottom: 0.2rem;
+    color: #174e40;
+  }
+
+  .success-banner p {
+    margin: 0;
+    line-height: 1.55;
+    color: #46675e;
+  }
+
+  /* HEADER */
+
+  .results-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 2rem;
+    padding-top: 1rem;
+  }
+
+  .results-header h1 {
+    max-width: 760px;
+    margin: 0;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    line-height: 1.04;
+    letter-spacing: -0.04em;
+  }
+
+  .results-header__description {
+    max-width: 680px;
+    margin: 1.1rem 0 0;
+    font-size: 1.05rem;
+    line-height: 1.65;
+    color: #62706d;
+  }
+
+  .results-header__badge {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid rgba(23, 107, 91, 0.12);
+    border-radius: 999px;
+    background: #f7faf9;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #40635a;
+  }
+
+  .results-header__badge-dot {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 999px;
+    background: #27a77e;
+  }
+
+  /* INTRO */
+
+  .results-intro {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .results-intro__item {
+    display: flex;
+    gap: 0.9rem;
+    padding: 1.15rem;
+    border: 1px solid rgba(20, 65, 57, 0.1);
+    border-radius: 1rem;
+    background: #fafcfb;
+  }
+
+  .results-intro__item :global(svg) {
+    flex: none;
+    margin-top: 0.15rem;
+    color: var(--color-primary, #176b5b);
+  }
+
+  .results-intro__item strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: #29443d;
+  }
+
+  .results-intro__item p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: #6c7c78;
+  }
+
+  /* REPORT CTA */
+
+  .reports-cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-top: 1rem;
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    border-radius: 1.25rem;
+    background: #f3f8f6;
+  }
+
+  .reports-cta__content {
+    max-width: 620px;
+  }
+
+  .reports-cta h2 {
+    margin: 0;
+    font-size: clamp(1.5rem, 3vw, 2.15rem);
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+  }
+
+  .reports-cta p:last-child {
+    margin: 0.75rem 0 0;
+    line-height: 1.65;
+    color: #60736d;
+  }
+
+  /* ERROR */
+
+  .error-card {
+    padding: 2rem;
+    border: 1px solid rgba(157, 60, 60, 0.15);
+    border-radius: 1.25rem;
+    background: #fffafa;
+  }
+
+  .error-card__icon {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    margin-bottom: 1rem;
+    border-radius: 0.8rem;
+    background: rgba(170, 61, 61, 0.08);
+    color: #a13e3e;
+  }
+
+  .error-card h1 {
+    margin: 0;
+    font-size: 1.6rem;
+  }
+
+  .error-card p {
+    margin: 0.75rem 0 1.5rem;
+    color: #6a5d5d;
+  }
+
+  @media (max-width: 720px) {
+    .results-page {
+      gap: 1.5rem;
+      padding-block: 1.5rem 3rem;
+    }
+
+    .locked-card {
+      padding: 1.5rem;
+      border-radius: 1.2rem;
+    }
+
+    .locked-card__features,
+    .results-intro {
+      grid-template-columns: 1fr;
+    }
+
+    .results-header,
+    .reports-cta {
+      flex-direction: column;
+    }
+
+    .results-header__badge {
+      align-self: flex-start;
+    }
+
+    .reports-cta {
+      align-items: stretch;
+    }
+  }
+</style>
