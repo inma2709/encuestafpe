@@ -7,6 +7,8 @@
     "dev": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 astro dev",
     "build": "astro build",
     "preview": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 astro preview",
+    "test:reports": "node --experimental-strip-types --test scripts/report-results.test.mjs",
+    "audit:reports": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 node --experimental-strip-types scripts/audit-report-coverage.mjs",
     "astro": "astro",
     "db:apply-v2": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 node scripts/apply-v2.mjs",
     "db:add-provinces": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 node scripts/add-provinces.mjs",

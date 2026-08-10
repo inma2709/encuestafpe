@@ -110,6 +110,28 @@ export interface QuestionResult {
   suppressed: boolean;
   buckets: ResultBucket[];
   textResponseCount?: number;
+  numericSummary?: {
+    median: number;
+    p25: number;
+    p75: number;
+    unit?: string;
+    distribution?: ResultBucket[];
+  };
+}
+
+export interface ReportQuestionGroup {
+  id: string;
+  title: string;
+  intro: string;
+  questions: QuestionResult[];
+}
+
+export interface ReportQuestionAudit extends QuestionResult {
+  blockId: string;
+  blockTitle: string;
+  shownBefore: boolean;
+  shownNow: boolean;
+  reason: string | null;
 }
 
 export interface ResultsView {
@@ -277,6 +299,10 @@ export interface ReportsView {
   metrics: MetricResult[];
   /** Comparaciones permitidas por el catálogo, agregadas por el mismo motor. */
   profileComparisons: GroupedMetricResult[];
+  /** All active survey questions, grouped in questionnaire order for reporting. */
+  questionGroups: ReportQuestionGroup[];
+  /** Coverage data retained for validation and future diagnostics. */
+  questionAudit: ReportQuestionAudit[];
 }
 
 export class DomainError extends Error {

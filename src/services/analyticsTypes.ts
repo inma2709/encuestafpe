@@ -12,6 +12,7 @@ export type PopulationId = (typeof POPULATION_IDS)[number];
 export const DIMENSION_IDS = [
   "respondent_type",
   "demo_ccaa",
+  "demo_province",
   "demo_family",
   "teaching_mode",
   "job_relation",
@@ -104,6 +105,7 @@ export interface GroupedMetricResult {
 export interface AnalyticsFilters {
   respondent_type?: RespondentType;
   demo_ccaa?: string;
+  demo_province?: string;
   demo_family?: string;
   teaching_mode?: string;
   job_relation?: string;

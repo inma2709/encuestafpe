@@ -13,6 +13,8 @@ interface Props {
   ogTitle?: string;
   ogDescription?: string;
   ogImage?: string;
+  ogImageWidth?: number;
+  ogImageHeight?: number;
   canonical?: string;
   /** narrow = encuesta; wide = home/informes; default = lectura */
   width?: "narrow" | "default" | "wide";
@@ -25,6 +27,8 @@ const {
   ogTitle = title,
   ogDescription = description,
   ogImage = "/encuestas.png",
+  ogImageWidth = 1254,
+  ogImageHeight = 1254,
   canonical,
   width = "default",
   bare = false,
@@ -53,8 +57,10 @@ const shellClass =
     <meta property="og:title" content={ogTitle} />
     <meta property="og:description" content={ogDescription} />
     <meta property="og:image" content={socialImageUrl} />
-    <meta property="og:image:width" content="1254" />
-    <meta property="og:image:height" content="1254" />
+    <meta property="og:image:url" content={socialImageUrl} />
+    <meta property="og:image:secure_url" content={socialImageUrl} />
+    <meta property="og:image:width" content={String(ogImageWidth)} />
+    <meta property="og:image:height" content={String(ogImageHeight)} />
     <meta property="og:image:alt" content="Encuesta sobre la Formación Profesional para el Empleo" />
     <meta property="og:url" content={canonicalUrl} />
     <meta property="og:type" content="website" />

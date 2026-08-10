@@ -15,11 +15,14 @@ export function requireEnv(name: keyof typeof ENV): string {
 
 export const SITE_NAME = "Observatorio de la Formación Profesional para el Empleo";
 
-/** Minimum responses before a result cell is shown (detalle) */
-export const RESULTS_MIN_N = 5;
+/** Minimum valid answers required to publish any aggregated question result. */
+export const MIN_REPORT_RESPONSES = 5;
 
-/** Umbral para publicar celdas / rankings en informes */
-export const REPORTS_MIN_N = 15;
+/** Backwards-compatible name used by the compact results page. */
+export const RESULTS_MIN_N = MIN_REPORT_RESPONSES;
+
+/** Below this base the result remains visible, with a caution notice. */
+export const REPORTS_CAUTION_N = 15;
 
 /** Diferencia relativa mínima para destacar un titular automático */
 export const HEADLINE_DIFF_PP = 20;

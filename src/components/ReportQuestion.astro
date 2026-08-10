@@ -1,0 +1,87 @@
+---
+import type { QuestionResult } from "@/types";
+import { REPORTS_CAUTION_N } from "@/lib/config";
+
+interface Props { question: QuestionResult; featured?: boolean; }
+const { question, featured = false } = Astro.props;
+const formatNumber = new Intl.NumberFormat("es-ES", { maximumFractionDigits: 1 });
+const isMultiple = question.type === "multi";
+const longList = question.buckets.length > 10;
+const caution = question.totalAnswers < REPORTS_CAUTION_N;
+const numeric = question.numericSummary;
+const numericUnit = numeric?.unit ?? "€";
+---
+
+<article class:list={["report-question", { "report-question--featured": featured }]}>
+  <header>
+    <h3>{question.label}</h3>
+    {isMultiple && <p>Respuesta múltiple. Los porcentajes pueden superar el 100 %.</p>}
+  </header>
+
+  {question.type === "number" && numeric ? (
+    <div class="report-question__numeric">
+      <div class="report-question__numeric-highlight">
+        <strong>{formatNumber.format(numeric.median)} {numericUnit}</strong>
+        <span>Mediana</span>
+      </div>
+      <p>El 50 % central de las respuestas se sitúa entre <strong>{formatNumber.format(numeric.p25)} y {formatNumber.format(numeric.p75)} {numericUnit}</strong>.</p>
+      {numeric.distribution && (
+        <section class="report-question__distribution" aria-label="Distribución de la remuneración por hora considerada adecuada">
+          <h4>Distribución de respuestas</h4>
+          <ol>
+            {numeric.distribution.map((range) => (
+              <li>
+                <div class="report-question__label"><span>{range.label}</span><strong>{range.display}</strong></div>
+                <div class="report-question__rail" aria-hidden="true"><span style={`width: ${range.percentage}%`}></span></div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+    </div>
+  ) : (
+    <details class="report-question__options" open={!longList}>
+      {longList && <summary>Ver las {question.buckets.length} opciones de respuesta</summary>}
+      <ol>
+        {question.buckets.map((bucket) => (
+          <li>
+            <div class="report-question__label"><span>{bucket.label}</span><strong>{bucket.display}</strong></div>
+            <div class="report-question__rail" aria-hidden="true"><span style={`width: ${Math.min(bucket.percentage, 100)}%`}></span></div>
+          </li>
+        ))}
+      </ol>
+    </details>
+  )}
+
+  <p class="report-question__base">
+    Base: {question.totalAnswers} {question.totalAnswers === 1 ? "respuesta válida" : "respuestas válidas"}
+    {question.type !== "number" && <> de {question.validSessions} personas a quienes correspondía la pregunta.</>}
+  </p>
+  {caution && <p class="report-question__caution">Base reducida. Interpreta este resultado con cautela.</p>}
+</article>
+
+<style>
+  .report-question { min-width: 0; padding: 1.15rem; border: 1px solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); }
+  .report-question--featured { background: linear-gradient(150deg, rgb(74 92 60 / .09), var(--color-surface) 52%); border-color: var(--color-line-strong); }
+  header h3 { margin: 0; overflow-wrap: anywhere; font-size: 1.1rem; line-height: 1.35; }
+  header p, .report-question__base, .report-question__caution { margin: .55rem 0 0; color: var(--color-ink-muted); font-size: .8rem; line-height: 1.45; }
+  .report-question__caution { color: var(--color-brand-dark); font-weight: 700; }
+  .report-question__options { margin-top: 1rem; }
+  summary { cursor: pointer; color: var(--color-brand-dark); font-size: .88rem; font-weight: 700; }
+  ol { display: grid; gap: .85rem; margin: .9rem 0 0; padding: 0; list-style: none; }
+  .report-question__label { display: flex; flex-direction: column; gap: .2rem; min-width: 0; font-size: .86rem; line-height: 1.35; }
+  .report-question__label span { overflow-wrap: anywhere; }
+  .report-question__label strong { color: var(--color-brand-dark); font-size: .82rem; font-variant-numeric: tabular-nums; }
+  .report-question__rail { height: .45rem; margin-top: .32rem; overflow: hidden; border-radius: 99px; background: var(--color-paper-deep); }
+  .report-question__rail span { display: block; height: 100%; border-radius: inherit; background: var(--color-brand); }
+  .report-question__numeric { display: grid; gap: 1rem; margin-top: 1rem; }
+  .report-question__numeric-highlight { min-width: 0; padding: 1rem; border-radius: var(--radius-sm); background: var(--color-paper); }
+  .report-question__numeric-highlight span { display: block; margin-top: .2rem; color: var(--color-ink-muted); font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+  .report-question__numeric-highlight strong { display: block; overflow-wrap: anywhere; color: var(--color-brand-dark); font-family: var(--font-display); font-size: clamp(1.8rem, 7vw, 2.65rem); line-height: 1; }
+  .report-question__numeric > p { margin: 0; color: var(--color-ink-muted); font-size: .9rem; line-height: 1.5; }
+  .report-question__numeric > p strong { color: var(--color-ink); }
+  .report-question__distribution { padding-top: .2rem; }
+  .report-question__distribution h4 { margin: 0; color: var(--color-brand-dark); font-size: .95rem; }
+  @media (min-width: 480px) { .report-question__label { flex-direction: row; justify-content: space-between; gap: 1rem; } .report-question__label strong { flex: 0 0 auto; } }
+  @media (min-width: 640px) { .report-question { padding: 1.35rem; } }
+</style>

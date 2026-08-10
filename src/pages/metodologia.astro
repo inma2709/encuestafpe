@@ -1,6 +1,6 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
-import { REPORTS_MIN_N, RESULTS_MIN_N, SITE_NAME } from "@/lib/config";
+import { MIN_REPORT_RESPONSES, SITE_NAME } from "@/lib/config";
 ---
 
 <BaseLayout title="Metodología">
@@ -73,7 +73,8 @@ import { REPORTS_MIN_N, RESULTS_MIN_N, SITE_NAME } from "@/lib/config";
   <p class="leading-relaxed">
     Además, los grupos con un número reducido de respuestas no se muestran en
     los informes para evitar que una combinación de características pueda
-    facilitar una identificación indirecta.
+    facilitar una identificación indirecta. El umbral de publicación es de
+    {MIN_REPORT_RESPONSES} respuestas válidas por pregunta y selección filtrada.
   </p>
 </section>
 

@@ -23,6 +23,31 @@ export interface SurveyDataset {
   questionByCode: Map<string, ActiveSurvey["questions"][number]>;
 }
 
+const ANSWERS_PAGE_SIZE = 1000;
+const SESSION_ID_BATCH_SIZE = 100;
+
+async function loadAnswersForSessions(sessionIds: string[]): Promise<AnswerRow[]> {
+  const admin = getSupabaseAdmin();
+  const answers: AnswerRow[] = [];
+
+  for (let start = 0; start < sessionIds.length; start += SESSION_ID_BATCH_SIZE) {
+    const batch = sessionIds.slice(start, start + SESSION_ID_BATCH_SIZE);
+    for (let from = 0; ; from += ANSWERS_PAGE_SIZE) {
+      const { data, error } = await admin.from("answers")
+        .select("question_id, option_id, value_text, value_number, session_id")
+        .in("session_id", batch)
+        .order("id", { ascending: true })
+        .range(from, from + ANSWERS_PAGE_SIZE - 1);
+      if (error) throw new DomainError(error.message, "INTERNAL");
+      const page = (data ?? []) as AnswerRow[];
+      answers.push(...page);
+      if (page.length < ANSWERS_PAGE_SIZE) break;
+    }
+  }
+
+  return answers;
+}
+
 export async function loadSurveySessions(studySlug: string) {
   const active = await getActiveSurvey(studySlug);
   const { data, error } = await getSupabaseAdmin().from("response_sessions")
@@ -34,14 +59,7 @@ export async function loadSurveySessions(studySlug: string) {
 
 export async function loadSurveyDataset(studySlug: string): Promise<SurveyDataset> {
   const { active, sessions } = await loadSurveySessions(studySlug);
-  let answers: AnswerRow[] = [];
-  if (sessions.length) {
-    const { data, error } = await getSupabaseAdmin().from("answers")
-      .select("question_id, option_id, value_text, value_number, session_id")
-      .in("session_id", sessions.map((session) => session.id));
-    if (error) throw new DomainError(error.message, "INTERNAL");
-    answers = (data ?? []) as AnswerRow[];
-  }
+  const answers = sessions.length ? await loadAnswersForSessions(sessions.map((session) => session.id)) : [];
   const optionIdByCode = new Map<string, Map<string, string>>();
   const optionMeta = new Map<string, { code: string; label: string; questionCode: string }>();
   const questionByCode = new Map(active.questions.map((question) => [question.code, question] as const));

@@ -1,26 +1,16 @@
 ---
-import type { MetricId } from "@/services/analyticsTypes";
 import type { ReportsView } from "@/types";
 import ReportFilters from "./ReportFilters.astro";
-import ReportMetric from "./ReportMetric.astro";
+import ReportQuestion from "./ReportQuestion.astro";
 import ReportProfileComparison from "./ReportProfileComparison.astro";
 
 interface Props { view: ReportsView; filterAction: string; }
 const { view, filterAction } = Astro.props;
-const metrics = new Map(view.metrics.map((metric) => [metric.metricId, metric]));
-const metric = (id: MetricId) => metrics.get(id);
-const profileMetric = metric("profile_composition");
+const profileMetric = view.metrics.find((metric) => metric.metricId === "profile_composition");
 const profiles = profileMetric && "options" in profileMetric ? profileMetric.options : [];
-const chapters: Array<{ id: string; number: string; title: string; intro: string; metrics: MetricId[]; tone?: "aspiring" }> = [
-  { id: "quienes-responden", number: "01", title: "Quiénes responden", intro: "La composición describe la muestra que ha participado; no representa por sí sola la distribución territorial o profesional del conjunto del sector.", metrics: ["profile_composition", "age_distribution", "gender_distribution", "education_distribution", "fpe_experience_distribution", "territorial_distribution", "main_family_distribution"] },
-  { id: "trabajo", number: "02", title: "Cómo se trabaja en la FPE", intro: "Entre docentes actuales que respondieron, estas medidas describen modalidad, relación laboral y peso de la FPE en su actividad.", metrics: ["teaching_mode_distribution", "employment_relation_distribution", "entity_type_distribution", "fpe_main_activity", "fpe_activity_share", "centres_per_year"] },
-  { id: "ingresos", number: "03", title: "Ingresos y dependencia económica", intro: "Los tramos de ingresos se muestran tal como fueron respondidos. No se convierten en un salario medio estimado.", metrics: ["annual_income_distribution", "income_dependency"] },
-  { id: "no-remunerado", number: "04", title: "El trabajo que no se paga", intro: "Las tareas podían seleccionarse conjuntamente; sus porcentajes no tienen por qué sumar 100 %.", metrics: ["unpaid_hours_distribution", "unpaid_tasks_ranking", "materials_burden"] },
-  { id: "estabilidad", number: "05", title: "Estabilidad y acceso al trabajo", intro: "Las respuestas muestran continuidad, previsibilidad y condiciones de acceso entre quienes participaron.", metrics: ["months_worked_distribution", "course_notice_distribution", "course_search_distribution", "work_availability_perception", "student_recruitment_difficulty"] },
-  { id: "percepcion", number: "06", title: "Cómo se percibe el sector", intro: "Las valoraciones expresan la percepción de la muestra; no establecen relaciones de causa y efecto.", metrics: ["salary_adequacy_perception", "professional_recognition", "sector_problems_ranking"] },
-  { id: "futuro", number: "07", title: "El futuro de la docencia FPE", intro: "Las expectativas recogen lo que declaran docentes y exdocentes que respondieron a la encuesta.", metrics: ["future_expectation_distribution"] },
-  { id: "aspirantes", number: "09", title: "Entrar en la FPE", intro: "Este capítulo reúne exclusivamente las respuestas de personas que se preparan o intentan acceder a la docencia FPE.", metrics: ["aspiring_family_interest", "aspiring_requirements_knowledge", "aspiring_teaching_qualification", "aspiring_sector_experience", "aspiring_job_search", "aspiring_access_barriers", "aspiring_preferred_mode", "aspiring_economic_perception", "aspiring_hourly_rate_distribution"], tone: "aspiring" },
-];
+const chapters = view.questionGroups.map((group, index) => ({ ...group, number: String(index + 1).padStart(2, "0") }));
+const hasActiveFilters = Object.values(view.filters).some(Boolean);
+const selectionSuppressed = hasActiveFilters && view.filteredSessions < view.minN;
 ---
 
 <section class="radiography">
@@ -45,6 +35,12 @@ const chapters: Array<{ id: string; number: string; title: string; intro: string
 
   <ReportFilters view={view} action={filterAction} />
 
+  {selectionSuppressed ? (
+    <section class="radiography__privacy" role="status">
+      <h2>Selección protegida por privacidad</h2>
+      <p>Este segmento no alcanza el mínimo de {view.minN} respuestas. No se publica ningún resultado del filtro aplicado.</p>
+    </section>
+  ) : (<>
   <section id="resumen" class="radiography__summary" aria-labelledby="summary-title">
     <div><p class="eyebrow">Lectura inicial</p><h2 id="summary-title">Principales resultados</h2></div>
     {view.insightHeadlines.length ? (
@@ -55,10 +51,10 @@ const chapters: Array<{ id: string; number: string; title: string; intro: string
   </section>
 
   {chapters.map((chapter) => (
-    <section id={chapter.id} class:list={["report-chapter", { "report-chapter--aspiring": chapter.tone === "aspiring" }]} aria-labelledby={`${chapter.id}-title`}>
+    <section id={chapter.id} class="report-chapter" aria-labelledby={`${chapter.id}-title`}>
       <header class="report-chapter__intro"><p>{chapter.number}</p><div><h2 id={`${chapter.id}-title`}>{chapter.title}</h2><p>{chapter.intro}</p></div></header>
       <div class="report-chapter__grid">
-        {chapter.metrics.map((id, index) => <ReportMetric metric={metric(id)} featured={index < 2} />)}
+        {chapter.questions.map((question, index) => <ReportQuestion question={question} featured={index < 2} />)}
       </div>
     </section>
   ))}
@@ -67,6 +63,7 @@ const chapters: Array<{ id: string; number: string; title: string; intro: string
     <header class="report-chapter__intro"><p>08</p><div><h2 id="compare-title">Docentes actuales y exdocentes</h2><p>La comparativa se publicará únicamente para indicadores y grupos que alcancen una base suficiente en ambos perfiles.</p></div></header>
     <div class="report-chapter__grid">{view.profileComparisons.map((comparison) => <ReportProfileComparison comparison={comparison} />)}</div>
   </section>
+  </>)}
 
   <section id="metodologia" class="radiography__methodology" aria-labelledby="method-title">
     <p class="eyebrow">Cómo leer los datos</p>
@@ -94,6 +91,9 @@ const chapters: Array<{ id: string; number: string; title: string; intro: string
   .radiography__nav { display: flex; gap: .5rem 1rem; overflow-x: auto; padding-bottom: .4rem; border-bottom: 1px solid var(--color-line); white-space: nowrap; scrollbar-width: thin; }
   .radiography__nav a { color: var(--color-ink-muted); font-size: .85rem; text-decoration: none; } .radiography__nav a:hover { color: var(--color-brand-dark); text-decoration: underline; }
   .radiography__summary { display: grid; gap: 1.25rem; padding: clamp(1.25rem, 4vw, 2.25rem); border-radius: var(--radius-lg); background: var(--color-brand-dark); color: #f7faf4; }
+  .radiography__privacy { padding: clamp(1.25rem, 4vw, 2rem); border: 1px solid var(--color-line-strong); border-radius: var(--radius-lg); background: var(--color-paper); }
+  .radiography__privacy h2 { margin: 0; font-size: clamp(1.4rem, 4vw, 2rem); }
+  .radiography__privacy p { margin: .65rem 0 0; color: var(--color-ink-muted); }
   .radiography__summary h2 { margin: .35rem 0 0; color: inherit; font-size: clamp(1.7rem, 5vw, 2.5rem); } .radiography__summary .eyebrow { color: #c6d7bd; }
   .radiography__summary ol { display: grid; gap: .75rem; margin: 0; padding: 0; list-style: none; } .radiography__summary li { display: flex; justify-content: space-between; gap: 1rem; padding: .75rem 0; border-bottom: 1px solid rgb(255 255 255 / .16); } .radiography__summary small { flex: 0 0 auto; color: #dce8d6; }
   .report-chapter { scroll-margin-top: 5.5rem; } .report-chapter__intro { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); gap: .75rem; margin-bottom: 1.25rem; } .report-chapter__intro > p { margin: .25rem 0 0; color: var(--color-sage); font-size: .8rem; font-weight: 700; letter-spacing: .08em; } .report-chapter__intro h2 { margin: 0; font-size: clamp(1.8rem, 5vw, 3rem); } .report-chapter__intro div > p { max-width: 48rem; margin: .65rem 0 0; color: var(--color-ink-muted); }

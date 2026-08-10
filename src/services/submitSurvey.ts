@@ -145,6 +145,9 @@ function validateAnswers(
       if (question.type !== "number") {
         throw new DomainError("Tipo de respuesta incorrecto", "VALIDATION");
       }
+      if (!Number.isFinite(answer.valueNumber)) {
+        throw new DomainError("Valor numérico no válido", "VALIDATION");
+      }
       if (
         question.minValue != null &&
         answer.valueNumber < question.minValue
